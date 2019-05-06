@@ -4,5 +4,5 @@ this repo is for the programming assignment in the course Numerical Optimization
 Course in MSc CS Degree In BGU.
 
 Programmers:
-Stav Ashor
+Stav Ashur
 Tomer Dobkin

@@ -1,5 +1,6 @@
 from math import exp
 from math import log
+from scipy.linalg import norm
 import numpy as np
 
 def sigmoid(x):
@@ -47,7 +48,7 @@ def logistic_hessian(X, Y, w):
     sigXw = vector_sigmoid(np.matmul(Xtranspose, w))
     D = np.diag(sigXw * (np.ones(m)-sigXw))
 
-    return np.matmul(np.matmul(X, D),Xtranspose)/m
+    return (1/m)*np.matmul(np.matmul(X, D),Xtranspose)
 
 
 if __name__ == "__main__":
@@ -82,8 +83,22 @@ if __name__ == "__main__":
     epsilon = 0.2
     f = lambda w: logistic_objective(X,Y,w)
     gradf = lambda w: logistic_gradient(X,Y,w)
+    hessf = lambda w: logistic_hessian(X, Y, w)
     # print(f(w+epsilon*d))
     # print(f(w))
-    print(abs(f(w+epsilon*d)-f(w)))
-    print((abs(f(w+epsilon*d)-f(w)))**2)
-    print(abs(f(w + epsilon * d) - f(w) - epsilon * np.matmul(d, gradf(w))))
+
+    for i in range(10):
+        epsilon = (0.5)**i
+        print(abs(f(w+epsilon*d)-f(w)))
+        # print((abs(f(w+epsilon*d)-f(w)))**2)
+        print(abs(f(w + epsilon * d) - f(w) - epsilon * np.matmul(d, gradf(w))))
+        print('\n')
+
+    for i in range(10):
+        epsilon = (0.5)**i
+        print(norm(gradf(w + epsilon * d) - gradf(w)))
+        # print((norm(gradf(w + epsilon * d) - gradf(w))) ** 2)
+        print(norm(gradf(w + epsilon * d) - gradf(w) - np.matmul(hessf(w), epsilon * d)))
+        print('\n')
+
+

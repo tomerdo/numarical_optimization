@@ -210,13 +210,13 @@ def GMRES1(A, b, x=None, iterations=100, tolerance=0.1, criteria=0):
 
 if __name__ == '__main__':
 
-    # for 1)b.
-    A = 2.1*np.diag(np.ones(100))-np.diag(np.ones(99),-1)-np.diag(np.ones(99),1)
-    b = np.random.rand(100,1)
-    sol, plot1, plot2 = GD(A, b)
-    pyplot.semilogy(plot1)
-    pyplot.show()
-    print(sol)
+    # # for 1)b.
+    # A = 2.1*np.diag(np.ones(100))-np.diag(np.ones(99),-1)-np.diag(np.ones(99),1)
+    # b = np.random.rand(100,1)
+    # sol, plot1, plot2 = CG(A, b)
+    # pyplot.semilogy(plot2)
+    # pyplot.show()
+    # print(sol)
 
     # for 3)c.
     A = np.array([[5, 4, 4, -1, 0],\

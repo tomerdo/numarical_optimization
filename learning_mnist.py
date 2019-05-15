@@ -1,7 +1,17 @@
 import mnist_handler
 import numpy as np
-import iterative_methods
 from matplotlib import pyplot
+
+def mnist_GD(A, b, x=None, iterations=100, tolerance=0.1, criteria=0):
+
+    if x is None:
+        n = (A.shape)[0]
+        x = np.zeros(n)
+
+
+    for iter in range(iterations):
+        x = x - alpha*grad
+
 
 
 if __name__ == "__main__":

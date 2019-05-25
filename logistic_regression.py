@@ -120,7 +120,6 @@ def mnist_GD(A, b, x=None, iterations=100, tolerance=0.1, criteria=0):
         x = np.zeros(n)
 
     plot1 = []
-    plot2 = []
 
     for iter in range(iterations):
         fx = logistic_objective(A, b, x)
@@ -129,7 +128,7 @@ def mnist_GD(A, b, x=None, iterations=100, tolerance=0.1, criteria=0):
         x = x - alpha * grad
         plot1.append(fx)
 
-    return x, plot1, plot2
+    return x, plot1
 
 
 def mnist_newton(A, b, x=None, iterations=1000, tolerance=0.1, criteria=0):
@@ -140,11 +139,11 @@ def mnist_newton(A, b, x=None, iterations=1000, tolerance=0.1, criteria=0):
 
     # these lists will eventually hold the data that needs to be plotted
     plot1 = []
-    plot2 = []
 
     epsilon = 10**(-5)
 
     for iter in range(iterations):
+        print(iter)
         fx = logistic_objective(A, b, x)
         grad = logistic_gradient(A, b, x)
         hess = logistic_hessian(A, b, x)
@@ -155,7 +154,7 @@ def mnist_newton(A, b, x=None, iterations=1000, tolerance=0.1, criteria=0):
         x = x - alpha * dn
         plot1.append(fx)
 
-    return x, plot1, plot2
+    return x, plot1
 
 
 if __name__ == "__main__":
@@ -185,9 +184,16 @@ if __name__ == "__main__":
         #     # making the vector boolean
         #     Y01 = Y01 > 0
         #
-        #     x, plot1, plot2 = mnist_GD(X01, Y01)
+        #     x, plot1 = mnist_GD(X01, Y01)
         #
-        #     pyplot.plot(plot1)
+        #     plot1 = abs(plot1 - logistic_objective(X01, Y01, x))
+        #
+        #     p, = pyplot.semilogy(plot1)
+        #     pyplot.legend([p],['|f(x)-f(x*)|'])
+        #
+        #     pyplot.xlabel('iteration')
+        #     pyplot.ylabel('value')
+        #     pyplot.title('MNIST - SD digits 0,1')
         #     pyplot.show()
         #
         #     pred = np.transpose(X01)
@@ -245,11 +251,17 @@ if __name__ == "__main__":
         #     # making the vector boolean
         #     Y89 = Y89 > 8
         #
-        #     x, plot1, plot2 = mnist_GD(X89, Y89)
+        #     x, plot1 = mnist_GD(X89, Y89)
         #
-        #     pyplot.plot(plot1)
+        #     plot1 = abs(plot1 - logistic_objective(X89, Y89, x))
+        #
+        #     p, = pyplot.semilogy(plot1)
+        #     pyplot.legend([p], ['|f(x)-f(x*)|'])
+        #
+        #     pyplot.xlabel('iteration')
+        #     pyplot.ylabel('value')
+        #     pyplot.title('MNIST - SD digits 8,9')
         #     pyplot.show()
-        #
         #     pred = np.transpose(X89)
         #
         #     # ==================================================================
@@ -307,9 +319,16 @@ if __name__ == "__main__":
             # making the vector boolean
             Y89 = Y89 > 8
 
-            x, plot1, plot2 = mnist_newton(X89, Y89)
+            x, plot1 = mnist_newton(X89, Y89)
 
-            pyplot.plot(plot1)
+            plot1 = abs(plot1 - logistic_objective(X89, Y89, x))
+
+            p, = pyplot.semilogy(plot1)
+            pyplot.legend([p],['|f(x)-f(x*)|'])
+
+            pyplot.xlabel('iteration')
+            pyplot.ylabel('value')
+            pyplot.title('training MNIST - SD digits 8,9 ')
             pyplot.show()
 
             pred = np.transpose(X89)
@@ -342,7 +361,6 @@ if __name__ == "__main__":
             diff = ans != Ytest89
 
             print(sum(diff))
-
 
     # gradient and hessian tests
     if True:

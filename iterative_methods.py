@@ -210,22 +210,35 @@ def GMRES1(A, b, x=None, iterations=100, tolerance=0.1, criteria=0):
 
 if __name__ == '__main__':
 
-    # # for 1)b.
+    # for 1)b.
     # A = 2.1*np.diag(np.ones(100))-np.diag(np.ones(99),-1)-np.diag(np.ones(99),1)
     # b = np.random.rand(100,1)
-    # sol, plot1, plot2 = CG(A, b)
-    # pyplot.semilogy(plot2)
+    # sol, plot1, plot2 = CG(A, b, None, 100, 0.1, 0)
+    #
+    # p, = pyplot.semilogy(plot1)
+    # pyplot.legend([p], ['||Ax-b||'])
+    #
+    # p, = pyplot.semilogy(plot2)
+    # pyplot.legend([p],['convergence factor'])
+    #
+    # pyplot.xlabel('iteration')
+    # pyplot.ylabel('value')
+    # pyplot.title('CG')
     # pyplot.show()
     # print(sol)
 
     # for 3)c.
-    A = np.array([[5, 4, 4, -1, 0],\
-                  [3, 12, 4, -5, -5],\
-                  [-4, 2, 6, 0, 3],\
-                  [4, 5, -7, 10, 2],\
-                  [1, 2, 5, 3, 10]])
-    b = np.array([1, 1, 1, 1, 1])
-    sol, plot1, plot2 = GMRES1(A, b, None, 50)
-    pyplot.semilogy(plot1)
-    pyplot.show()
-    print(sol)
+    # A = np.array([[5, 4, 4, -1, 0],\
+    #               [3, 12, 4, -5, -5],\
+    #               [-4, 2, 6, 0, 3],\
+    #               [4, 5, -7, 10, 2],\
+    #               [1, 2, 5, 3, 10]])
+    # b = np.array([1, 1, 1, 1, 1])
+    # sol, plot1, plot2 = GMRES1(A, b, None, 50)
+    # p, = pyplot.semilogy(plot1)
+    # pyplot.legend([p], ['||Ax-b||'])
+    # pyplot.xlabel('iteration')
+    # pyplot.ylabel('value')
+    # pyplot.title('GMERS1')
+    # pyplot.show()
+    # print(sol)

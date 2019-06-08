@@ -208,8 +208,31 @@ def GMRES1(A, b, x=None, iterations=100, tolerance=0.1, criteria=0):
 
     return x, first_plot, second_plot
 
-if __name__ == '__main__':
 
+def projected_coordinate_descent(h, g, a, b, iterations=100):
+    n = g.shape[0]
+    x = np.zeros(n)
+    for iter in range(iterations):
+        for i in range(n):
+            m_i = compute_m_i(x, i, h, g)
+            print("m_i for index " + str(i) + " in iter " + str(iter) + " is " + str(m_i))
+            if m_i < a[i]:
+                x[i] = a[i]
+            elif m_i > b[i]:
+                x[i] = b[i]
+            else:  # a_i <= m_i <= b_i
+                x[i] = m_i
+
+        print("in iteration: " + str(iter) + " x is : " + str(x))
+    return x
+
+
+def compute_m_i(x, i, h, g):
+    nom = np.matmul(h[i], x) - g[i]
+    return nom / h[i][i]
+
+
+if __name__ == '__main__':
     # for 1)b.
     # A = 2.1*np.diag(np.ones(100))-np.diag(np.ones(99),-1)-np.diag(np.ones(99),1)
     # b = np.random.rand(100,1)
@@ -226,8 +249,8 @@ if __name__ == '__main__':
     # pyplot.title('CG')
     # pyplot.show()
     # print(sol)
-
-    # for 3)c.
+    #
+    # # for 3)c.
     # A = np.array([[5, 4, 4, -1, 0],\
     #               [3, 12, 4, -5, -5],\
     #               [-4, 2, 6, 0, 3],\
@@ -242,3 +265,17 @@ if __name__ == '__main__':
     # pyplot.title('GMERS1')
     # pyplot.show()
     # print(sol)
+
+    # for ass3.q3.d
+
+    h = np.array([[5, -1, -1, -1, -1],
+                  [-1, 5, -1, -1, -1],
+                  [-1, -1, 5, -1, -1],
+                  [-1, -1, -1, 5, -1],
+                  [-1, -1, -1, -1, 5],
+                  ])
+
+    g = np.array([18, 6, -12, -6, 18])
+    a = np.array([0, 0, 0, 0, 0])
+    b = np.array([5, 5, 5, 5, 5])
+    projected_coordinate_descent(h, g, a, b)

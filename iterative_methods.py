@@ -228,8 +228,11 @@ def projected_coordinate_descent(h, g, a, b, iterations=100):
 
 
 def compute_m_i(x, i, h, g):
-    nom = np.matmul(h[i], x) - g[i]
-    return nom / h[i][i]
+    x_comp = np.delete(x, i)
+    h_i_comp = np.delete(h[i], i)
+
+    nom = np.matmul(h_i_comp, x_comp) - g[i]
+    return np.around(nom / h[i][i], 3)
 
 
 if __name__ == '__main__':
@@ -274,8 +277,9 @@ if __name__ == '__main__':
                   [-1, -1, -1, 5, -1],
                   [-1, -1, -1, -1, 5],
                   ])
-
+    a_val = 0
+    b_val = 5
     g = np.array([18, 6, -12, -6, 18])
-    a = np.array([0, 0, 0, 0, 0])
-    b = np.array([5, 5, 5, 5, 5])
+    a = np.array([a_val, a_val, a_val, a_val, a_val])
+    b = np.array([b_val, b_val, b_val, b_val, b_val])
     projected_coordinate_descent(h, g, a, b)

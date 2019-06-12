@@ -59,8 +59,6 @@ def SD(mu, x=None, iterations=100, tolerance=0.1, criteria=0):
         alpha = line_search(x, mu, gradf, fx)
 
         x = x - alpha * gradf
-
-
     return x, plot
 
 if __name__ == "__main__":

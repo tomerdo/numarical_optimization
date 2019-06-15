@@ -63,20 +63,21 @@ def SD(mu, x=None, iterations=100, tolerance=0.1, criteria=0):
 
 if __name__ == "__main__":
 
-    x = np.ndarray(2)
+    mus = [0.01, 0.1, 1, 10, 100]
+    for mu in mus:
 
-    x[0] = 0
+        x = np.ndarray(2)
 
-    x[1] = 0
+        x[0] = 0
+        x[1] = 0
 
-    mu = 1
+        x, plot = SD(mu, x)
 
-    x, plot = SD(mu, x)
+        print("mu is: " + str(mu) + " x is: " + str(x))
 
-    print(x)
+        pyplot.plot(plot, label=str(mu))
 
-
-    pyplot.plot(plot)
+    pyplot.legend(title='mu values:')
     pyplot.show()
 
 

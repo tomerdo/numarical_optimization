@@ -42,7 +42,7 @@ def line_search(x, mu, grad, fx, alpha0=1, beta=0.5, c=0.0001, iterations=30):
 
 
 # Steepest descent method for LASSO regression
-def SD(mu, x=None, iterations=100, tolerance=0.1, criteria=0):
+def SD(mu, x=None, iterations=10, tolerance=0.1, criteria=0):
     if x is None:
         x = np.zeros(2)
 

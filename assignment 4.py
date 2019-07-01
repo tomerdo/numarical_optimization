@@ -1,9 +1,7 @@
 import scipy.io
+import stochastic_gradient_descent
 import numpy as np
 from matplotlib import pyplot
-
-
-
 
 
 if __name__ == "__main__":
@@ -12,18 +10,26 @@ if __name__ == "__main__":
     SwissRollData = scipy.io.loadmat('SwissRollData.mat')
 
     SwissCt = SwissRollData['Ct']
+    SwissYt = SwissRollData['Yt']
+    print(" swissCt.shape: " + str(SwissCt.shape))
+    print(" swissYt.shape: " + str(SwissYt.shape))
 
-    print(SwissCt.shape)
+    PeaksYt = PeaksData['Yt']
+    PeaksCt = PeaksData['Ct']
 
-    PeaksCt = PeaksData['Yt']
+    print(" peeksYt.shape: " + str(PeaksYt.shape))
+    print(" peeksCt.shape: " + str(PeaksCt.shape))
 
-    print(PeaksCt.shape)
+    GMMYt = GMMData['Ct']
+    GMMCt = GMMData['Yt']
 
-    print(PeaksCt[0].shape)
-
+    print(" gmmYt.shape: " + str(GMMYt.shape))
+    print(" gmmCt.shape: " + str(GMMCt.shape))
     print(type(GMMData['Cv']))
     print(type(GMMData['Ct']))
     print(type(GMMData['Yv']))
     print(type(GMMData['Yt']))
+
+    stochastic_gradient_descent.stochastic_gradient_descent(W=[0, 0, 0, 0], )
 
 

@@ -1,4 +1,5 @@
 import random
+import numpy as np
 # this class contains the implementation of SGD
 
 
@@ -40,9 +41,12 @@ def stochastic_gradient_descent(W = [], samples = [] ,max_iter=100, learning_rat
 
     for i in range(max_iter):
         num_of_mini_batches = (samples.shape[0] / batch_size) - 1
+        perm = np.random.permutation(samples.shape[0])
+
         for j in range(num_of_mini_batches):
-        # iterating over all mini batches
-            mini_batch = samples[j * batch_size:  (j+1) * batch_size]
+            batch_indexes = perm[(j * batch_size):((j + 1) * batch_size)];
+            # iterating over all mini batches
+            mini_batch = samples[batch_indexes]
             # iterate over the mini_batch [previous_index, ... next_index]
             grad = grad_of_softmax(mini_batch, W)
             W = W + learning_rate * grad

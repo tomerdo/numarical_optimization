@@ -2,6 +2,7 @@ import scipy.io
 import numpy as np
 from matplotlib import pyplot
 from scipy.linalg import norm
+import mnist_handler
 
 
 # returns a matrix with n columns of copies of column vector vec of size m
@@ -20,13 +21,6 @@ def softmax_objective(X, W, C, b=0):
     Xt = X.transpose()
     XtW = np.matmul(Xt, W)
 
-    # if b != 0:
-    #     # pumping into matrix with shape (m,l)
-    #     B = pump(b, l, m, False)
-    # else:
-    #     B = 0
-    #
-    # XtW = XtW - B
     eta = XtW.max(axis=1)
 
     # pumping into matrix with shape (m,l)
@@ -45,9 +39,9 @@ def softmax_objective(X, W, C, b=0):
     res = 0
 
     for i in range(l):
-        res += (-1/m)*sum(C[i, :]*logDXtW[:, i])
+        res += sum(C[i, :]*logDXtW[:, i])
 
-    return res
+    return res*(-1/m)
 
 
 def softmax_objective_single(X, W, C, b=0):
@@ -78,12 +72,26 @@ def softmax_gradient_single(X, W, C, b=0):
 # computes the softmax gradient for all weight vectors together
 def softmax_gradient(X, W, C, b=0):
     m = X.shape[1]
+    l = W.shape[1]
+
     Xt = X.transpose()
 
-    XtW = np.matmul(Xt,W)
-    expXtW = np.exp(XtW)
-    D = np.diag(1/(expXtW.sum(axis=1)))
-    DexpXtw = np.matmul(D, expXtW)
+    XtW = np.matmul(Xt, W)
+
+    eta = XtW.max(axis=1)
+    # pumping into matrix with shape (m,l)
+    eta = pump(eta, m, l)
+
+    num = np.exp(XtW - eta)
+    # summing rows to get denominator
+    den = num.sum(axis=1)
+
+    # pumping into matrix with shape (m,l)
+    den = pump(den, m, l)
+
+    logDXtW = np.log(num / den)
+
+    DexpXtw = num / den
 
     return (1/m)*np.matmul(X, DexpXtw-C.transpose())
 
@@ -104,9 +112,9 @@ def gradient(X, W, C, w):
     return softmax_gradient(X, W, C)
 
 
-def stochastic_gradient_descent(X, W, C, max_iter=100, learning_rate=0.02, batch_size = 10):
+def stochastic_gradient_descent(X, W, C, max_iter=10000, learning_rate=0.02, batch_size = 1000):
 
-    history = [W]
+    history = []
 
     for i in range(max_iter):
         num_of_mini_batches = round(X.shape[1] / batch_size)
@@ -115,8 +123,9 @@ def stochastic_gradient_descent(X, W, C, max_iter=100, learning_rate=0.02, batch
         for j in range(num_of_mini_batches):
             batch_indexes = perm[(j * batch_size):((j + 1) * batch_size)];
             # iterating over all mini batches
-            mini_batch_X = X[:,batch_indexes]
-            mini_batch_C = C[:,batch_indexes]
+            mini_batch_X = X[:, batch_indexes]
+            mini_batch_C = C[:, batch_indexes]
+
             # iterate over the mini_batch [previous_index, ... next_index]
 
             # grad = 0
@@ -130,8 +139,12 @@ def stochastic_gradient_descent(X, W, C, max_iter=100, learning_rate=0.02, batch
 
             W = W - learning_rate * grad
 
-        print(softmax_objective(X, W, C))
-        history.append(W)
+        if i % 100 == 0:
+            print(i)
+            print(softmax_objective(X, W, C))
+
+        # print(softmax_objective(X, W, C))
+        history.append(softmax_objective(X, W, C))
 
     return history, W
 
@@ -139,57 +152,109 @@ def stochastic_gradient_descent(X, W, C, max_iter=100, learning_rate=0.02, batch
 def predict(W, X):
     prob = np.matmul(X.transpose(),W)
     res = prob.argmax(axis=1)
-    return  res
+    return res
 
 if __name__ == "__main__":
 
 
     # GMMData = scipy.io.loadmat('GMMData.mat')
-    PeaksData = scipy.io.loadmat('PeaksData.mat')
-    # SwissRollData = scipy.io.loadmat('SwissRollData.mat')
-
     # Ct = GMMData['Ct']
     # Cv = GMMData['Cv']
     # Yt = GMMData['Yt']
     # Yv = GMMData['Yv']
 
-    Ct = PeaksData['Ct']
-    Cv = PeaksData['Cv']
-    Yt = PeaksData['Yt']
-    Yv = PeaksData['Yv']
+    # PeaksData = scipy.io.loadmat('PeaksData.mat')
+    # Ct = PeaksData['Ct']
+    # Cv = PeaksData['Cv']
+    # Yt = PeaksData['Yt']
+    # Yv = PeaksData['Yv']
 
+
+    # SwissRollData = scipy.io.loadmat('SwissRollData.mat')
     # Ct = SwissRollData['Ct']
     # Cv = SwissRollData['Cv']
     # Yt = SwissRollData['Yt']
     # Yv = SwissRollData['Yv']
 
+    # reading the training data
+    Y = mnist_handler.read_label_file(
+        'D:\\programs\\pycharm\projects\\numarical_optimization2\\mnist\\train-labels.idx1-ubyte')
+    X = mnist_handler.read_image_file(
+        'D:\\programs\\pycharm\projects\\numarical_optimization2\\mnist\\train-images.idx3-ubyte')
 
 
-    print(Ct.shape)
-
-    print(Cv.shape)
-
-    print(Yt.shape)
-
-    print(Yv.shape)
-
-    n = Yv.shape[0]
-    l = Cv.shape[0]
+    print(X.shape)
+    print(Y.shape)
 
 
-    W = np.ones((n,l))*10
+    C = np.zeros((10, Y.shape[0]))
 
-    history, W = stochastic_gradient_descent(Yv, W, Cv)
+    # creating C as required
+    for i in range(10):
+        C[i, :] = Y == i
+
+    print(C.shape)
+
+    X.shape = (X.shape[0], X.shape[1] * X.shape[2])
+
+    print(X.shape)
+
+    X1 = X.transpose()
+
+    X = X1*(1/255)
+
+    m = X.shape[1]
+    n = X.shape[0]
+    l = C.shape[0]
+
+    bias_row = np.ones(m)
+
+    X = np.vstack([X,bias_row])
+
+    W = np.zeros((n+1, l))
+
+    history, W = stochastic_gradient_descent(X, W, C)
 
 
-
-
-
-    # C = predict(W, SwissYv)
-    # print((C-SwissCv).sum(axis=0))
-
-
-    print(W)
+    # n = Yt.shape[0]
+    # l = Ct.shape[0]
+    #
+    # #adding bias
+    # m = Yt.shape[1]
+    # bias_row = np.ones(m)
+    # Yt = np.vstack([Yt, bias_row])
+    #
+    # m = Yv.shape[1]
+    # bias_row = np.ones(m)
+    # Yv = np.vstack([Yv, bias_row])
+    #
+    #
+    # print(Ct.shape)
+    #
+    # print(Cv.shape)
+    #
+    # print(Yt.shape)
+    #
+    # print(Yv.shape)
+    #
+    # n = Yt.shape[0]
+    # l = Ct.shape[0]
+    #
+    #
+    # W = np.ones((n,l))
+    #
+    # history, W = stochastic_gradient_descent(Yt, W, Ct)
+    #
+    # print(history[-1])
+    #
+    #
+    #
+    # C = predict(W, Yv)
+    # # print((C-Cv).sum(axis=0))
+    #
+    # C = np.vstack([C,Cv])
+    #
+    # print(W)
 
 
 
@@ -200,7 +265,9 @@ if __name__ == "__main__":
     # C = np.asarray([[0,0,0],[0,0,0],[1,0,0],[0,0,1],[0,0,0],[0,1,0]])
     #
     # print(softmax_objective(A, W, C))
+
     # Gradient testing
+
     # X = np.random.rand(3, 5)
     # W = np.random.rand(3, 3)
     # c = np.random.randint(0, 3, 5)
@@ -233,7 +300,7 @@ if __name__ == "__main__":
     #     epsilon = epsilon * 0.5
     #     curr = abs(f(w + epsilon * d) - f(w)-epsilon*sum(d*(gradf(w)[:, 0])))
     #     print('ratio 2 is: ', curr / last)
-
+    #
 
 
 

@@ -161,69 +161,69 @@ if __name__ == "__main__":
     # steepest descent for digits 0 1
     if True:
         1
-        # if True:
-        #     # ==================================================================
-        #     # ================   This is the learning phase ====================
-        #     # ==================================================================
-        #
-        #     # reading the training data
-        #     Y = mnist_handler.read_label_file(
-        #         'D:\\programs\\pycharm\projects\\numarical_optimization2\\mnist\\train-labels.idx1-ubyte')
-        #     X = mnist_handler.read_image_file(
-        #         'D:\\programs\\pycharm\projects\\numarical_optimization2\\mnist\\train-images.idx3-ubyte')
-        #
-        #     # getting the digits we need
-        #     X01, Y01 = mnist_handler.get_digits([0, 1], X, Y)
-        #
-        #     # transforming the matrices representing the images into vectors of pixels
-        #     X01.shape = (np.shape(X01)[0], np.shape(X01)[1] * np.shape(X01)[2])
-        #
-        #     # make matrix of order n x m instead of m x n
-        #     X01 = np.transpose(X01)
-        #
-        #     # making the vector boolean
-        #     Y01 = Y01 > 0
-        #
-        #     x, plot1 = mnist_GD(X01, Y01)
-        #
-        #     plot1 = abs(plot1 - logistic_objective(X01, Y01, x))
-        #
-        #     p, = pyplot.semilogy(plot1)
-        #     pyplot.legend([p],['|f(x)-f(x*)|'])
-        #
-        #     pyplot.xlabel('iteration')
-        #     pyplot.ylabel('value')
-        #     pyplot.title('MNIST - SD digits 0,1')
-        #     pyplot.show()
-        #
-        #     pred = np.transpose(X01)
-        #
-        #     # ==================================================================
-        #     # ================   This is the testing phase =====================
-        #     # ==================================================================
-        #
-        #     # reading the test data
-        #     Ytest = mnist_handler.read_label_file(
-        #         'D:\\programs\\pycharm\projects\\numarical_optimization2\\mnist\\t10k-labels.idx1-ubyte')
-        #     Xtest = mnist_handler.read_image_file(
-        #         'D:\\programs\\pycharm\projects\\numarical_optimization2\\mnist\\t10k-images.idx3-ubyte')
-        #
-        #     # getting the digits we need
-        #     Xtest01, Ytest01 = mnist_handler.get_digits([0, 1], Xtest, Ytest)
-        #
-        #     # transforming the matrices representing the images into vectors of pixels
-        #     Xtest01.shape = (np.shape(Xtest01)[0], np.shape(Xtest01)[1] * np.shape(Xtest01)[2])
-        #
-        #     # using the output x to predict the results
-        #     ans = np.matmul(Xtest01, x)
-        #
-        #     # if the result is bigger than 0.5 we predict 1. otherwise we predict 0.
-        #     ans = ans>0.5
-        #
-        #     # looking for mistakes
-        #     diff = ans != Ytest01
-        #
-        #     print(sum(diff))
+        if True:
+            # ==================================================================
+            # ================   This is the learning phase ====================
+            # ==================================================================
+
+            # reading the training data
+            Y = mnist_handler.read_label_file(
+                'D:\\programs\\pycharm\projects\\numarical_optimization2\\mnist\\train-labels.idx1-ubyte')
+            X = mnist_handler.read_image_file(
+                'D:\\programs\\pycharm\projects\\numarical_optimization2\\mnist\\train-images.idx3-ubyte')
+
+            # getting the digits we need
+            X01, Y01 = mnist_handler.get_digits([0, 1], X, Y)
+
+            # transforming the matrices representing the images into vectors of pixels
+            X01.shape = (np.shape(X01)[0], np.shape(X01)[1] * np.shape(X01)[2])
+
+            # make matrix of order n x m instead of m x n
+            X01 = np.transpose(X01)
+
+            # making the vector boolean
+            Y01 = Y01 > 0
+
+            x, plot1 = mnist_GD(X01, Y01)
+
+            plot1 = abs(plot1 - logistic_objective(X01, Y01, x))
+
+            p, = pyplot.semilogy(plot1)
+            pyplot.legend([p],['|f(x)-f(x*)|'])
+
+            pyplot.xlabel('iteration')
+            pyplot.ylabel('value')
+            pyplot.title('MNIST - SD digits 0,1')
+            pyplot.show()
+
+            pred = np.transpose(X01)
+
+            # ==================================================================
+            # ================   This is the testing phase =====================
+            # ==================================================================
+
+            # reading the test data
+            Ytest = mnist_handler.read_label_file(
+                'D:\\programs\\pycharm\projects\\numarical_optimization2\\mnist\\t10k-labels.idx1-ubyte')
+            Xtest = mnist_handler.read_image_file(
+                'D:\\programs\\pycharm\projects\\numarical_optimization2\\mnist\\t10k-images.idx3-ubyte')
+
+            # getting the digits we need
+            Xtest01, Ytest01 = mnist_handler.get_digits([0, 1], Xtest, Ytest)
+
+            # transforming the matrices representing the images into vectors of pixels
+            Xtest01.shape = (np.shape(Xtest01)[0], np.shape(Xtest01)[1] * np.shape(Xtest01)[2])
+
+            # using the output x to predict the results
+            ans = np.matmul(Xtest01, x)
+
+            # if the result is bigger than 0.5 we predict 1. otherwise we predict 0.
+            ans = ans>0.5
+
+            # looking for mistakes
+            diff = ans != Ytest01
+
+            print(sum(diff))
 
     # steepest descent for digits 8 9
     if True:

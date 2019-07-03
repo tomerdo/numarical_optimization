@@ -120,6 +120,8 @@ def stochastic_gradient_descent(X, W, C, max_iter=10000, learning_rate=0.02, bat
         num_of_mini_batches = round(X.shape[1] / batch_size)
         perm = np.random.permutation(X.shape[1])
 
+        learning_rate = 1 / np.sqrt(i + 1)
+
         for j in range(num_of_mini_batches):
             batch_indexes = perm[(j * batch_size):((j + 1) * batch_size)];
             # iterating over all mini batches
@@ -134,8 +136,6 @@ def stochastic_gradient_descent(X, W, C, max_iter=10000, learning_rate=0.02, bat
             # grad = (1/batch_size)*grad
 
             grad = softmax_gradient(mini_batch_X, W, mini_batch_C)
-
-            learning_rate = 1/(j+1)
 
             W = W - learning_rate * grad
 
@@ -169,12 +169,56 @@ if __name__ == "__main__":
     # Yt = PeaksData['Yt']
     # Yv = PeaksData['Yv']
 
-
     # SwissRollData = scipy.io.loadmat('SwissRollData.mat')
     # Ct = SwissRollData['Ct']
     # Cv = SwissRollData['Cv']
     # Yt = SwissRollData['Yt']
     # Yv = SwissRollData['Yv']
+
+    # n = Yt.shape[0]
+    # l = Ct.shape[0]
+    #
+    # # adding bias
+    # m = Yt.shape[1]
+    # bias_row = np.ones(m)
+    # Yt = np.vstack([Yt, bias_row])
+    #
+    # m = Yv.shape[1]
+    # bias_row = np.ones(m)
+    # Yv = np.vstack([Yv, bias_row])
+    #
+    # print(Ct.shape)
+    #
+    # print(Cv.shape)
+    #
+    # print(Yt.shape)
+    #
+    # print(Yv.shape)
+    #
+    # X = Yv
+    # C = Cv
+    #
+    # n = X.shape[0]
+    # l = C.shape[0]
+    #
+    # W = np.ones((n, l))
+    #
+    # history, W = stochastic_gradient_descent(X, W, C)
+    #
+    # print(history[-1])
+    #
+    #
+    #
+    # C = predict(W, Yv)
+    # # print((C-Cv).sum(axis=0))
+    #
+    # C = np.vstack([C,Cv])
+    #
+    # print(W)
+
+
+
+
 
     # reading the training data
     Y = mnist_handler.read_label_file(
@@ -216,45 +260,6 @@ if __name__ == "__main__":
     history, W = stochastic_gradient_descent(X, W, C)
 
 
-    # n = Yt.shape[0]
-    # l = Ct.shape[0]
-    #
-    # #adding bias
-    # m = Yt.shape[1]
-    # bias_row = np.ones(m)
-    # Yt = np.vstack([Yt, bias_row])
-    #
-    # m = Yv.shape[1]
-    # bias_row = np.ones(m)
-    # Yv = np.vstack([Yv, bias_row])
-    #
-    #
-    # print(Ct.shape)
-    #
-    # print(Cv.shape)
-    #
-    # print(Yt.shape)
-    #
-    # print(Yv.shape)
-    #
-    # n = Yt.shape[0]
-    # l = Ct.shape[0]
-    #
-    #
-    # W = np.ones((n,l))
-    #
-    # history, W = stochastic_gradient_descent(Yt, W, Ct)
-    #
-    # print(history[-1])
-    #
-    #
-    #
-    # C = predict(W, Yv)
-    # # print((C-Cv).sum(axis=0))
-    #
-    # C = np.vstack([C,Cv])
-    #
-    # print(W)
 
 
 

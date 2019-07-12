@@ -84,10 +84,10 @@ def softmax_data_gradient(X, W, C):
     # num = np.exp(WtX - eta)
     num = np.exp(WtX)
     # summing rows to get denominator
-    den = num.sum(axis=1)
+    den = num.sum(axis=0)
 
     # pumping into matrix with shape (m,l)
-    den = pump(den, l, m)
+    den = pump(den, m, l, False)
 
     DexpWtX = num / den
 
@@ -193,6 +193,7 @@ def predict(W, X):
     res = prob.argmax(axis=1)
     return res
 
+
 # calculates the value of ReLU(X)
 def ReLU(X):
     X[X < 0] = 0
@@ -243,8 +244,10 @@ def forward_propagation(W, X, B, C):
 def backward_propagation(W, X, B, C, relu_derivative, learning_rate):
 
     # last layer gradient decent
-    grad = softmax_gradient(X[-1], W, C)
+    grad = softmax_gradient(X, W[-1], C)
     W[-1] = W[-1] - learning_rate * grad
+
+    grad = softmax_data_gradient(X, W, C)
 
     # going through all hidden layers
     for i in range(B.shape[0]-1, -1, -1):

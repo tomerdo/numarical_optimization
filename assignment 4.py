@@ -231,28 +231,31 @@ def build_layers(data_dimension, num_of_classes, layer_sizes):
 # the backward propagation)
 def forward_propagation(W, X, B, C):
     relu_derivatives = []
-    X_i = X
-    for i in range(B.shape[0]):
-        X_i = ReLU(np.matmul(W[i], X_i) + B[i])
-        relu_derivatives.append(X_i > 0)
+    x_history = []
+    x_i = X
 
-    return softmax_objective(X, W, C, B), relu_derivatives
+    for i in range(B.shape[0]-1):
+        x_history.append(x_i)
+        x_i = ReLU(np.matmul(W[i], x_i) + B[i])
+        relu_derivatives.append(x_i > 0)
+
+    return softmax_objective(X, W, C), relu_derivatives, x_history
 
 
 # going through each layer and preforming the gradient descent on the biases
 # and the weights.
-def backward_propagation(W, X, B, C, relu_derivative, learning_rate):
+def backward_propagation(W, X, B, C, relu_derivative, x_history, learning_rate):
 
     # last layer gradient decent
     grad = softmax_gradient(X, W[-1], C)
     W[-1] = W[-1] - learning_rate * grad
 
-    grad = softmax_data_gradient(X, W, C)
+    x_grad = softmax_data_gradient(X, W, C)
 
     # going through all hidden layers
     for i in range(B.shape[0]-1, -1, -1):
         B[i] = B[i] - learning_rate * relu_derivative[i]
-        grad = 1
+        x_grad = x_grad
         W[i] = W[i] - learning_rate * grad
 
 
@@ -280,9 +283,9 @@ def NN_SGD(X, C, layer_sizes, max_iter=50, learning_rate=0.02, batch_size=1000):
             mini_batch_X = X[:, batch_indexes]
             mini_batch_C = C[:, batch_indexes]
 
-            loss, relu_derivative = forward_propagation(mini_batch_X, W, mini_batch_C, B)
+            loss, relu_derivatives, x_history = forward_propagation(mini_batch_X, W, mini_batch_C, B)
 
-            W, B = backward_propagation(mini_batch_X, W, mini_batch_C, B, relu_derivative, learning_rate)
+            W, B = backward_propagation(mini_batch_X, W, mini_batch_C, B, relu_derivatives, x_history,  learning_rate)
 
 
 

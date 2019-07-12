@@ -89,7 +89,6 @@ def softmax_gradient(X, W, C, b=0):
     # pumping into matrix with shape (m,l)
     den = pump(den, m, l)
 
-    logDXtW = np.log(num / den)
 
     DexpXtw = num / den
 
@@ -112,7 +111,7 @@ def gradient(X, W, C, w):
     return softmax_gradient(X, W, C)
 
 
-def stochastic_gradient_descent(X, W, C, max_iter=10000, learning_rate=0.02, batch_size = 1000):
+def stochastic_gradient_descent(X, W, C, max_iter=10000, learning_rate=0.02, batch_size= 10_000):
 
     history = []
 
@@ -120,7 +119,8 @@ def stochastic_gradient_descent(X, W, C, max_iter=10000, learning_rate=0.02, bat
         num_of_mini_batches = round(X.shape[1] / batch_size)
         perm = np.random.permutation(X.shape[1])
 
-        learning_rate = 1 / np.sqrt(i + 1)
+        learning_rate = 3
+        # learning_rate = 1 / np.sqrt(i + 1)
 
         for j in range(num_of_mini_batches):
             batch_indexes = perm[(j * batch_size):((j + 1) * batch_size)];
@@ -150,18 +150,18 @@ def stochastic_gradient_descent(X, W, C, max_iter=10000, learning_rate=0.02, bat
 
 
 def predict(W, X):
-    prob = np.matmul(X.transpose(),W)
+    prob = np.matmul(X.transpose(), W)
     res = prob.argmax(axis=1)
     return res
 
 if __name__ == "__main__":
 
 
-    # GMMData = scipy.io.loadmat('GMMData.mat')
-    # Ct = GMMData['Ct']
-    # Cv = GMMData['Cv']
-    # Yt = GMMData['Yt']
-    # Yv = GMMData['Yv']
+    GMMData = scipy.io.loadmat('GMMData.mat')
+    Ct = GMMData['Ct']
+    Cv = GMMData['Cv']
+    Yt = GMMData['Yt']
+    Yv = GMMData['Yv']
 
     # PeaksData = scipy.io.loadmat('PeaksData.mat')
     # Ct = PeaksData['Ct']
@@ -175,91 +175,91 @@ if __name__ == "__main__":
     # Yt = SwissRollData['Yt']
     # Yv = SwissRollData['Yv']
 
-    # n = Yt.shape[0]
-    # l = Ct.shape[0]
-    #
-    # # adding bias
-    # m = Yt.shape[1]
-    # bias_row = np.ones(m)
-    # Yt = np.vstack([Yt, bias_row])
-    #
-    # m = Yv.shape[1]
-    # bias_row = np.ones(m)
-    # Yv = np.vstack([Yv, bias_row])
-    #
-    # print(Ct.shape)
-    #
-    # print(Cv.shape)
-    #
-    # print(Yt.shape)
-    #
-    # print(Yv.shape)
-    #
-    # X = Yv
-    # C = Cv
-    #
-    # n = X.shape[0]
-    # l = C.shape[0]
-    #
-    # W = np.ones((n, l))
-    #
-    # history, W = stochastic_gradient_descent(X, W, C)
-    #
-    # print(history[-1])
-    #
-    #
-    #
-    # C = predict(W, Yv)
-    # # print((C-Cv).sum(axis=0))
-    #
-    # C = np.vstack([C,Cv])
-    #
-    # print(W)
+    n = Yt.shape[0]
+    l = Ct.shape[0]
 
+    # adding bias
+    m = Yt.shape[1]
+    bias_row = np.ones(m)
+    Yt = np.vstack([Yt, bias_row])
 
+    m = Yv.shape[1]
+    bias_row = np.ones(m)
+    Yv = np.vstack([Yv, bias_row])
 
+    print(Ct.shape)
 
+    print(Cv.shape)
 
-    # reading the training data
-    Y = mnist_handler.read_label_file(
-        'D:\\programs\\pycharm\projects\\numarical_optimization2\\mnist\\train-labels.idx1-ubyte')
-    X = mnist_handler.read_image_file(
-        'D:\\programs\\pycharm\projects\\numarical_optimization2\\mnist\\train-images.idx3-ubyte')
+    print(Yt.shape)
 
+    print(Yv.shape)
 
-    print(X.shape)
-    print(Y.shape)
+    X = Yv
+    C = Cv
 
-
-    C = np.zeros((10, Y.shape[0]))
-
-    # creating C as required
-    for i in range(10):
-        C[i, :] = Y == i
-
-    print(C.shape)
-
-    X.shape = (X.shape[0], X.shape[1] * X.shape[2])
-
-    print(X.shape)
-
-    X1 = X.transpose()
-
-    X = X1*(1/255)
-
-    m = X.shape[1]
     n = X.shape[0]
     l = C.shape[0]
 
-    bias_row = np.ones(m)
-
-    X = np.vstack([X,bias_row])
-
-    W = np.zeros((n+1, l))
-
+    W = np.ones((n, l))
+    W = W * 50
     history, W = stochastic_gradient_descent(X, W, C)
 
+    print(history[-1])
 
+
+
+    C = predict(W, Yv)
+    print((C-Cv).sum(axis=0))
+
+    C = np.vstack([C, Cv])
+
+    print(W)
+
+
+
+
+
+    # # reading the training data
+    # Y = mnist_handler.read_label_file(
+    #     'D:\\programs\\pycharm\projects\\numarical_optimization2\\mnist\\train-labels.idx1-ubyte')
+    # X = mnist_handler.read_image_file(
+    #     'D:\\programs\\pycharm\projects\\numarical_optimization2\\mnist\\train-images.idx3-ubyte')
+    #
+    #
+    # print(X.shape)
+    # print(Y.shape)
+    #
+    #
+    # C = np.zeros((10, Y.shape[0]))
+    #
+    # # creating C as required
+    # for i in range(10):
+    #     C[i, :] = Y == i
+    #
+    # print(C.shape)
+    #
+    # X.shape = (X.shape[0], X.shape[1] * X.shape[2])
+    #
+    # print(X.shape)
+    #
+    # X1 = X.transpose()
+    #
+    # X = X1*(1/255)
+    #
+    # m = X.shape[1]
+    # n = X.shape[0]
+    # l = C.shape[0]
+    #
+    # bias_row = np.ones(m)
+    #
+    # X = np.vstack([X,bias_row])
+    #
+    # W = np.zeros((n+1, l))
+    #
+    # history, W = stochastic_gradient_descent(X, W, C)
+    #
+    #
 
 
 

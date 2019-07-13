@@ -68,13 +68,14 @@ def backward_propagation(W, X, B, C, relu_derivative, x_history, learning_rate):
     grad = grads.softmax_gradient(x_softmax, W[-1], C)
     W[-1] = W[-1] - learning_rate * grad
 
-    # loss function gradient w.r.t X
-    x_grad = grads.softmax_data_gradient(x_softmax, W[-1], C)
+    temp_w = W[-1]
+    # loss function gradient w.r.t X , excluding the last row of W ( the biases row)
+    x_grad = grads.softmax_data_gradient(x_history[-1], temp_w[:-1], C)
 
     # going through all hidden layers
     for i in range(B.shape[0] - 1, -1, -1):
         B[i] = B[i] - learning_rate * grads.JacV_b(relu_derivative[i], x_grad)
-        W[i] = W[i] - learning_rate * grads.JacV_w(X[i], relu_derivative[i], x_grad)
+        W[i] = W[i] - learning_rate * grads.JacV_w(x_history[i], relu_derivative[i], x_grad)
         x_grad = grads.JacV_x(W[i], relu_derivative[i], x_grad)
 
     return W, B

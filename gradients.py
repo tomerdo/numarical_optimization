@@ -67,23 +67,33 @@ def ReLU_Gradient_by_b(W, X, b):
 
 def JacV_b(relu_derivative, V):
     k = relu_derivative.shape[0]
-    sig_prime = pump(relu_derivative, k, k)
+    m = relu_derivative.shape[1]
 
-    return np.matmul(sig_prime, V)
+    # iteration over l_i to compute the jacobian
+    relu_mul_v = np.zeros(k)
+    for i in range(k):
+        relu_mul_v[i] = np.matmul(relu_derivative[i], V[i])
+    return relu_mul_v / m
 
 
 def JacV_w(X, relu_derivative, V):
     k = relu_derivative.shape[0]
-    sig_prime = pump(relu_derivative, k, k)
-    VX = np.matmul(V, X.transpose())
+    m = relu_derivative.shape[1]
 
-    return np.matmul(sig_prime, VX)
+    v_x = np.matmul(V, X.transpose())
+
+    relu_mul_v_x = np.zeros(k)
+    for i in range(k):
+        relu_mul_v_x = np.matmul(relu_derivative[i], v_x[i])
+    return relu_mul_v_x / m
 
 
 def JacV_x(W, relu_derivative, V):
     k = relu_derivative.shape[0]
-    sig_prime = pump(relu_derivative, k, k)
-    sig_prime_W = np.matmul(sig_prime, W)
 
-    return np.matmul(sig_prime_W.transpose(), V)
+    relu_mul_v = np.zeros(k)
+    for i in range(k):
+        relu_mul_v[i] = np.matmul(relu_derivative[i], V[i])
+
+    return np.matmul(np.transpose(W), relu_mul_v)
 

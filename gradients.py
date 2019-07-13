@@ -85,5 +85,5 @@ def JacV_x(W, relu_derivative, V):
     sig_prime = pump(relu_derivative, k, k)
     sig_prime_W = np.matmul(sig_prime, W)
 
-    return np.matmul(sig_prime_W, V)
+    return np.matmul(sig_prime_W.transpose(), V)
 

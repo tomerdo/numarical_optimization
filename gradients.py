@@ -63,3 +63,27 @@ def softmax_data_gradient(X, W, C):
 # returns the gradient of the layer with respect to b as a matrix (why not as a vector?)
 def ReLU_Gradient_by_b(W, X, b):
     return np.diag((np.matmul(W, X) + b) > 0)
+
+
+def JacV_b(relu_derivative, V):
+    k = relu_derivative.shape[0]
+    sig_prime = pump(relu_derivative, k, k)
+
+    return np.matmul(sig_prime, V)
+
+
+def JacV_w(X, relu_derivative, V):
+    k = relu_derivative.shape[0]
+    sig_prime = pump(relu_derivative, k, k)
+    VX = np.matmul(V, X.transpose())
+
+    return np.matmul(sig_prime, VX)
+
+
+def JacV_x(W, relu_derivative, V):
+    k = relu_derivative.shape[0]
+    sig_prime = pump(relu_derivative, k, k)
+    sig_prime_W = np.matmul(sig_prime, W)
+
+    return np.matmul(sig_prime_W, V)
+

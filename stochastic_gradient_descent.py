@@ -68,7 +68,7 @@ def stochastic_gradient_descent(X, W, C, x_valid=None, c_valid=None, max_iter=60
     # c_training = C
     # c_validation = c_valid
     # if not is_mnist_data:
-        # converting labels to numeral form in order to calculate success rates
+    # converting labels to numeral form in order to calculate success rates
     labels = np.arange(C.shape[0])
 
     training_labels = grads.pump(labels, C.shape[0], C.shape[1])
@@ -84,7 +84,7 @@ def stochastic_gradient_descent(X, W, C, x_valid=None, c_valid=None, max_iter=60
         learning_rate = 1 / np.sqrt(i + 1)
 
         for j in range(num_of_mini_batches):
-            batch_indexes = perm[(j * batch_size):((j + 1) * batch_size)];
+            batch_indexes = perm[(j * batch_size):((j + 1) * batch_size)]
             # iterating over all mini batches
             mini_batch_x = X[:, batch_indexes]
             mini_batch_c = C[:, batch_indexes]

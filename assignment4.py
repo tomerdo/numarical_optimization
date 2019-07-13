@@ -3,7 +3,7 @@ import numpy as np
 import mnist_handler
 import matplotlib.pyplot as plt
 import stochastic_gradient_descent as sgd
-
+import gradients as grads
 
 # calculates the value of ReLU(X)
 def ReLU(X):
@@ -30,8 +30,8 @@ def build_layers(data_dimension, num_of_classes, layer_sizes):
         W.append(W_i)
         B.append(b_i)
 
-    # adding the last layer
-    W_i = np.zeros((num_of_classes, last_dim))
+    # adding the last layer, +1 is for biases
+    W_i = np.zeros((num_of_classes, last_dim + 1))
     W.append(W_i)
 
     return np.asarray(W), np.asarray(B)
@@ -40,7 +40,7 @@ def build_layers(data_dimension, num_of_classes, layer_sizes):
 # calculates the forward propagation of the NN and returns the current loss
 # as well as the ReLU derivatives of each hidden layer (those that are needed for
 # the backward propagation)
-def forward_propagation(W, X, B, C):
+def forward_propagation(W, X, B):
     relu_derivatives = []
     x_history = []
     x_i = X
@@ -50,24 +50,29 @@ def forward_propagation(W, X, B, C):
         x_i = ReLU(np.matmul(W[i], x_i) + B[i])
         relu_derivatives.append(x_i > 0)
 
-    return sgd.softmax_objective(X, W, C), relu_derivatives, x_history
+    return relu_derivatives, x_history
 
 
 # going through each layer and preforming the gradient descent on the biases
 # and the weights.
 def backward_propagation(W, X, B, C, relu_derivative, x_history, learning_rate):
 
+    # adding bias row to the softmax data
+    bias_row = np.ones(X.shape[1])
+    x_softmax = np.vstack([X[-1]], bias_row)
+
     # last layer gradient decent
-    grad = sgd.softmax_gradient(X, W[-1], C)
+    grad = grads.softmax_gradient(x_softmax, W[-1], C)
     W[-1] = W[-1] - learning_rate * grad
 
-    x_grad = grad.softmax_data_gradient(X, W, C)
+    # loss function gradient w.r.t X
+    x_grad = grads.softmax_data_gradient(X[-1], W[-1], C)
 
     # going through all hidden layers
     for i in range(B.shape[0] - 1, -1, -1):
-        B[i] = B[i] - learning_rate * relu_derivative[i]
-        x_grad = x_grad
-        W[i] = W[i] - learning_rate * grad
+        B[i] = B[i] - learning_rate * grads.JacV_b(relu_derivative[i], x_grad)
+        W[i] = W[i] - learning_rate * grads.JacV_w(X[i], relu_derivative[i], x_grad)
+        x_grad = grads.JacV_x(W[i], relu_derivative[i], x_grad)
 
     return W, B
 
@@ -91,9 +96,9 @@ def NN_SGD(X, C, layer_sizes, max_iter=50, learning_rate=0.02, batch_size=1000):
             mini_batch_X = X[:, batch_indexes]
             mini_batch_C = C[:, batch_indexes]
 
-            loss, relu_derivatives, x_history = forward_propagation(mini_batch_X, W, mini_batch_C, B)
+            relu_derivatives, x_history = forward_propagation(W, mini_batch_X, B)
 
-            W, B = backward_propagation(mini_batch_X, W, mini_batch_C, B, relu_derivatives, x_history,  learning_rate)
+            W, B = backward_propagation(W, mini_batch_X, B, mini_batch_C, relu_derivatives, x_history, learning_rate)
 
 
 def running_on_mnist_data_set():

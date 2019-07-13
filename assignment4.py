@@ -1,9 +1,8 @@
 import scipy.io
 import numpy as np
-from matplotlib import pyplot
-from scipy.linalg import norm
 import mnist_handler
 import matplotlib.pyplot as plt
+
 
 # returns a matrix with n columns of copies of column vector vec of size m
 def pump(vec, m, n, transpose=True):
@@ -126,24 +125,29 @@ def gradient_x(X, W, C, x):
     return softmax_data_gradient(X1, W, C)
 
 
-def stochastic_gradient_descent(X, W, C, Xvalid=None, Cvalid=None, max_iter=1_000, learning_rate=0.02,
-                                batch_size=10_000 , train_rate_data = [] ,  validation_rate_data =[] , epoch_data=[]):
+# SGD - this algorithm takes the data,  the weights and the labels and it's learning the weights the optimize
+# the softmax objective function
+def stochastic_gradient_descent(X, W, C, x_valid=None, c_valid=None, max_iter=600, learning_rate=0.02,
+                                batch_size=10_000, train_rate_data=[], validation_rate_data=[], epoch_data=[]):
     history = []
 
-    # converting labels to numeral form in order to calculate success rates
+    # c_training = C
+    # c_validation = c_valid
+    # if not is_mnist_data:
+        # converting labels to numeral form in order to calculate success rates
     labels = np.arange(C.shape[0])
 
     training_labels = pump(labels, C.shape[0], C.shape[1])
     c_training = (C * training_labels).sum(axis=0)
 
-    validation_labels = pump(labels, Cvalid.shape[0], Cvalid.shape[1])
-    c_validation = (Cvalid * validation_labels).sum(axis=0)
+    validation_labels = pump(labels, c_valid.shape[0], c_valid.shape[1])
+    c_validation = (c_valid * validation_labels).sum(axis=0)
 
     for i in range(max_iter):
         num_of_mini_batches = round(X.shape[1] / batch_size)
         perm = np.random.permutation(X.shape[1])
 
-        # learning_rate = 1 / np.sqrt(i + 1)
+        learning_rate = 1 / np.sqrt(i + 1)
 
         for j in range(num_of_mini_batches):
             batch_indexes = perm[(j * batch_size):((j + 1) * batch_size)];
@@ -162,21 +166,23 @@ def stochastic_gradient_descent(X, W, C, Xvalid=None, Cvalid=None, max_iter=1_00
 
             W = W - learning_rate * grad
 
-        train_success_rate, validation_success_rate = check_predication(W, X, Xvalid, c_training, c_validation)
+        train_success_rate, validation_success_rate = check_predication(W, X, x_valid, c_training, c_validation)
         history.append([train_success_rate, validation_success_rate])
 
         if i % 100 == 0:
             print('loss: ', softmax_objective(X, W, C), ' epoch: ', i)
+
             print("train success rate is: " + str(train_success_rate * 100) + "%" + "  validation success rate is: "
                   + str(validation_success_rate * 100) + "%")
+            # appending data for the plots
             train_rate_data.append(train_success_rate * 100)
             validation_rate_data.append(validation_success_rate * 100)
             epoch_data.append(i)
 
-    return history, W, train_success_rate, validation_success_rate, epoch_data , train_rate_data , validation_rate_data
+    return history, W, train_success_rate, validation_success_rate, epoch_data, train_rate_data, validation_rate_data
 
 
-def check_predication(W, X, Xvalid, c_training, c_validation , num_of_samples=1000):
+def check_predication(W, X, Xvalid, c_training, c_validation, num_of_samples=1000):
     training_idx = np.random.randint(0, X.shape[1] - 1, num_of_samples)
     validation_idx = np.random.randint(0, Xvalid.shape[1] - 1, num_of_samples)
     training_pred = predict(W, X[:, training_idx])
@@ -365,14 +371,14 @@ def gradient_test_by_w():
 def running_on_mnist_data_set():
     # reading the training data
     Y = mnist_handler.read_label_file(
-        'D:\\programs\\pycharm\projects\\numarical_optimization2\\mnist\\train-labels.idx1-ubyte')
+        'mnist/train-labels.idx1-ubyte')
     X = mnist_handler.read_image_file(
-        'D:\\programs\\pycharm\projects\\numarical_optimization2\\mnist\\train-images.idx3-ubyte')
+        'mnist/train-images.idx3-ubyte')
     # reading the test data
     Ytest = mnist_handler.read_label_file(
-        'D:\\programs\\pycharm\projects\\numarical_optimization2\\mnist\\t10k-labels.idx1-ubyte')
+        'mnist/t10k-labels.idx1-ubyte')
     Xtest = mnist_handler.read_image_file(
-        'D:\\programs\\pycharm\projects\\numarical_optimization2\\mnist\\t10k-images.idx3-ubyte')
+        'mnist/t10k-images.idx3-ubyte')
 
     # transforming the matrices representing the images into vectors of pixels
     Xtest.shape = (np.shape(Xtest)[0], np.shape(Xtest)[1] * np.shape(Xtest)[2])
@@ -394,6 +400,12 @@ def running_on_mnist_data_set():
 
     print(C.shape)
 
+    c_test = np.zeros((10, Ytest.shape[0]))
+
+    for i in range(10):
+        c_test[i, :] = Ytest == i
+
+
     X.shape = (X.shape[0], X.shape[1] * X.shape[2])
 
     print(X.shape)
@@ -413,15 +425,19 @@ def running_on_mnist_data_set():
 
     W = np.zeros((n + 1, l))
 
-    history, W = stochastic_gradient_descent(X, W, C)
+    history, W,  train_success_rate, validation_success_rate, epoch_data, train_rate_data, validation_rate_data\
+        = stochastic_gradient_descent(X, W, C, is_mnist_data=True, x_valid=Xtest, c_valid=c_test)
 
+    plot_results(epoch_data,train_rate_data, validation_rate_data, "MNIST")
     res = predict(W, X)
 
     print(sum(res - Y != 0))
+    print("the number of labeled train data: " + str(Y.shape[0]))
 
     res = predict(W, Xtest)
 
     print(sum(res - Ytest != 0))
+    print("the number of labeled validation data: " + str(Y.shape[0]))
 
 
 def load_data_set(data_set_name):
@@ -433,7 +449,7 @@ def load_data_set(data_set_name):
     return ct, cv, yt, yv
 
 
-def plot_results():
+def plot_results(epoch_data, train_rate_data, validation_rate_data, example_data):
     plt.plot(epoch_data, train_rate_data, label="train success rate")
     plt.plot(epoch_data, validation_rate_data, label="validation success rate")
     # naming the x axis
@@ -487,9 +503,7 @@ if __name__ == "__main__":
 # ================================================================================================
 # ================================================================================================
 
-# running_on_mnist_data_set()
-
-
+    running_on_mnist_data_set()
 # ================================================================================================
 # ================================================================================================
 # =============================       Gradient testing      ======================================

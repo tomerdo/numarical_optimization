@@ -60,11 +60,9 @@ def softmax_data_gradient(X, W, C):
     return (1 / m) * np.matmul(W, DexpWtX - C)
 
 
-# returns the gradient of the layer with respect to b as a matrix (why not as a vector?)
-def ReLU_Gradient_by_b(W, X, b):
-    return np.diag((np.matmul(W, X) + b) > 0)
-
-
+# The next 3 functions are functions that return the transposed Jacobian of a layer
+# multiplied by a vector V. Each function corresponds to a Jacobian with respect to
+# a different parameter: b, W and x.
 def JacV_b(relu_derivative, V):
     k = relu_derivative.shape[0]
     sig_prime = pump(relu_derivative, k, k)

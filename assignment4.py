@@ -24,18 +24,20 @@ def build_layers(data_dimension, num_of_classes, layer_sizes):
 
     # building hidden layers
     for i in range(num_of_layers):
-        W_i = np.zeros((layer_sizes[i], last_dim))
-        b_i = np.zeros(layer_sizes[i])
-        last_dim = layer_sizes[i]
+        layer_size_i = layer_sizes[i]
+        W_i = np.zeros((last_dim, layer_size_i))
+        b_i = np.zeros(layer_size_i)
+        last_dim = layer_size_i
         W.append(W_i)
         B.append(b_i)
 
     # adding the last layer, +1 is for biases
-    W_i = np.zeros((num_of_classes, last_dim + 1))
-    W.append(W_i)
+    w_last_layer = np.zeros((last_dim + 1, num_of_classes))
+    W.append(w_last_layer)
+    W = np.asarray(W)
 
-    return np.asarray(W), np.asarray(B)
-
+    return np.transpose(W), np.asarray(B)
+    # return np.asanyarray(), B
 
 # calculates the forward propagation of the NN and returns the current loss
 # as well as the ReLU derivatives of each hidden layer (those that are needed for
@@ -45,9 +47,10 @@ def forward_propagation(W, X, B):
     x_history = []
     x_i = X
 
-    for i in range(B.shape[0]-1):
+    for i in range(B.shape[0]):
         x_history.append(x_i)
-        x_i = ReLU(np.matmul(W[i], x_i) + B[i])
+        mul_res = np.matmul(W[i], x_i)
+        x_i = ReLU(np.matmul(W[i], x_i) + grads.pump(B[i], mul_res.shape[0], mul_res.shape[1]))
         relu_derivatives.append(x_i > 0)
 
     return relu_derivatives, x_history
@@ -59,14 +62,14 @@ def backward_propagation(W, X, B, C, relu_derivative, x_history, learning_rate):
 
     # adding bias row to the softmax data
     bias_row = np.ones(X.shape[1])
-    x_softmax = np.vstack([X[-1]], bias_row)
+    x_softmax = np.vstack([x_history[-1], bias_row])
 
     # last layer gradient decent
     grad = grads.softmax_gradient(x_softmax, W[-1], C)
     W[-1] = W[-1] - learning_rate * grad
 
     # loss function gradient w.r.t X
-    x_grad = grads.softmax_data_gradient(X[-1], W[-1], C)
+    x_grad = grads.softmax_data_gradient(x_softmax, W[-1], C)
 
     # going through all hidden layers
     for i in range(B.shape[0] - 1, -1, -1):
@@ -77,11 +80,8 @@ def backward_propagation(W, X, B, C, relu_derivative, x_history, learning_rate):
     return W, B
 
 
-def NN_SGD(X, C, layer_sizes, max_iter=50, learning_rate=0.02, batch_size=1000):
+def nn_sgd(X, C, layer_sizes, max_iter=50, learning_rate=0.02, batch_size=1000):
     W, B = build_layers(X.shape[0], C.shape[0], layer_sizes)
-
-    num_of_mini_batches = round(X.shape[1] / batch_size)
-    perm = np.random.permutation(X.shape[1])
 
     for i in range(max_iter):
         num_of_mini_batches = round(X.shape[1] / batch_size)
@@ -93,12 +93,16 @@ def NN_SGD(X, C, layer_sizes, max_iter=50, learning_rate=0.02, batch_size=1000):
         for j in range(num_of_mini_batches):
             batch_indexes = perm[(j * batch_size):((j + 1) * batch_size)];
             # iterating over all mini batches
-            mini_batch_X = X[:, batch_indexes]
-            mini_batch_C = C[:, batch_indexes]
+            mini_batch_x = X[:, batch_indexes]
+            mini_batch_c = C[:, batch_indexes]
 
-            relu_derivatives, x_history = forward_propagation(W, mini_batch_X, B)
+            relu_derivatives, x_history = forward_propagation(W, mini_batch_x, B)
 
-            W, B = backward_propagation(W, mini_batch_X, B, mini_batch_C, relu_derivatives, x_history, learning_rate)
+            W, B = backward_propagation(W, mini_batch_x, B, mini_batch_c, relu_derivatives, x_history, learning_rate)
+
+        if i % 100 == 0:
+            # results are affected only by the last W layer
+            print('loss: ', sgd.softmax_objective(X, W[-1], C), ' epoch: ', i)
 
 
 def running_on_mnist_data_set():
@@ -195,6 +199,14 @@ def plot_results(epoch_data, train_rate_data, validation_rate_data, example_data
     plt.show()
 
 
+# print to stdout result after running sgd learning
+def print_result(example_data, train_success_rate, validation_success_rate, learning_rate, batch_size):
+    print("after running SGD on: " + example_data + " train success rate is: " + str(
+        train_success_rate * 100) + "%" + "  validation success rate is: "
+          + str(validation_success_rate * 100) + "%" + " learning rate is : " + str(learning_rate)
+          + " mini_batch size is " + str(batch_size))
+
+
 if __name__ == "__main__":
     # ================================================================================================
     # ================================================================================================
@@ -208,34 +220,39 @@ if __name__ == "__main__":
     example_data = Gmm
     Ct, Cv, Yt, Yv = load_data_set(example_data)
     # adding bias
-    m = Yt.shape[1]
-    bias_row = np.ones(m)
-    Yt = np.vstack([Yt, bias_row])
-
-    m = Yv.shape[1]
-    bias_row = np.ones(m)
-    Yv = np.vstack([Yv, bias_row])
+    # m = Yt.shape[1]
+    # bias_row = np.ones(m)
+    # Yt = np.vstack([Yt, bias_row])
+    #
+    # m = Yv.shape[1]
+    # bias_row = np.ones(m)
+    # Yv = np.vstack([Yv, bias_row])
 
     n = Yt.shape[0]
     l = Ct.shape[0]
 
+    # ================================================================================================
+    # ================================================================================================
+    # ==================      (questions 1 - 3) simple softmax  with out NN         ==================
+    # ================================================================================================
+    # ================================================================================================
+
     W = np.ones((n, l))
     learning_rate = 0.1
     batch_size = 10_000
-    history, W, train_success_rate, validation_success_rate, epoch_data, train_rate_data, validation_rate_data\
-        = sgd.stochastic_gradient_descent(Yt, W, Ct, Yv, Cv, max_iter=10_000)
-    print("after running SGD on: " + example_data + " train success rate is: " + str(train_success_rate * 100) + "%" + "  validation success rate is: "
-          + str(validation_success_rate * 100) + "%" + " learning rate is : " + str(learning_rate)
-          + " mini_batch size is " + str(batch_size))
+    # history, W, train_success_rate, validation_success_rate, epoch_data, train_rate_data, validation_rate_data\
+    #     = sgd.stochastic_gradient_descent(Yt, W, Ct, Yv, Cv, max_iter=1_000)
 
-    plot_results()
+    # print_result(example_data, train_success_rate, validation_success_rate, learning_rate, batch_size)
+    # plot_results(epoch_data, train_rate_data, validation_rate_data, example_data)
+
 # ================================================================================================
 # ================================================================================================
 # =============================             MNIST           ======================================
 # ================================================================================================
 # ================================================================================================
 
-    running_on_mnist_data_set()
+    # running_on_mnist_data_set()
 # ================================================================================================
 # ================================================================================================
 # =============================       Gradient testing      ======================================
@@ -245,3 +262,10 @@ if __name__ == "__main__":
 # gradient_test_by_w()
 #  TODO: refactor it so wil not be duplicate code
 # gradient_test_x()
+
+# ================================================================================================
+# ================================================================================================
+# =============================       RUNNING NN (question 4 - 7)      ===========================
+# ================================================================================================
+# ================================================================================================
+    nn_sgd(Yt, Ct, layer_sizes=[5, 5, 5], max_iter=10_000)

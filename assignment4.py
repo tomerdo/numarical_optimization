@@ -127,7 +127,7 @@ def gradient_x(X, W, C, x):
 
 # SGD - this algorithm takes the data,  the weights and the labels and it's learning the weights the optimize
 # the softmax objective function
-def stochastic_gradient_descent(X, W, C, is_mnist_data = False, x_valid=None, c_valid=None, max_iter=600, learning_rate=0.02,
+def stochastic_gradient_descent(X, W, C, x_valid=None, c_valid=None, max_iter=600, learning_rate=0.02,
                                 batch_size=10_000, train_rate_data=[], validation_rate_data=[], epoch_data=[]):
     history = []
 

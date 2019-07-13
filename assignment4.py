@@ -155,6 +155,13 @@ def stochastic_gradient_descent(X, W, C, is_mnist_data = False, x_valid=None, c_
             mini_batch_x = X[:, batch_indexes]
             mini_batch_c = C[:, batch_indexes]
 
+            # iterate over the mini_batch [previous_index, ... next_index]
+
+            # grad = 0
+            # for l in range(batch_size):
+            #     grad += softmax_gradient_single(mini_batch_X[:,l], W, mini_batch_C[:,l])
+            # grad = (1/batch_size)*grad
+
             grad = softmax_gradient(mini_batch_x, W, mini_batch_c)
 
             W = W - learning_rate * grad
@@ -236,27 +243,31 @@ def build_layers(data_dimension, num_of_classes, layer_sizes):
 # the backward propagation)
 def forward_propagation(W, X, B, C):
     relu_derivatives = []
-    X_i = X
-    for i in range(B.shape[0]):
-        X_i = ReLU(np.matmul(W[i], X_i) + B[i])
-        relu_derivatives.append(X_i > 0)
+    x_history = []
+    x_i = X
 
-    return softmax_objective(X, W, C, B), relu_derivatives
+    for i in range(B.shape[0]-1):
+        x_history.append(x_i)
+        x_i = ReLU(np.matmul(W[i], x_i) + B[i])
+        relu_derivatives.append(x_i > 0)
+
+    return softmax_objective(X, W, C), relu_derivatives, x_history
 
 
 # going through each layer and preforming the gradient descent on the biases
 # and the weights.
-def backward_propagation(W, X, B, C, relu_derivative, learning_rate):
+def backward_propagation(W, X, B, C, relu_derivative, x_history, learning_rate):
+
     # last layer gradient decent
     grad = softmax_gradient(X, W[-1], C)
     W[-1] = W[-1] - learning_rate * grad
 
-    grad = softmax_data_gradient(X, W, C)
+    x_grad = softmax_data_gradient(X, W, C)
 
     # going through all hidden layers
     for i in range(B.shape[0] - 1, -1, -1):
         B[i] = B[i] - learning_rate * relu_derivative[i]
-        grad = 1
+        x_grad = x_grad
         W[i] = W[i] - learning_rate * grad
 
     return W, B
@@ -281,9 +292,9 @@ def NN_SGD(X, C, layer_sizes, max_iter=50, learning_rate=0.02, batch_size=1000):
             mini_batch_X = X[:, batch_indexes]
             mini_batch_C = C[:, batch_indexes]
 
-            loss, relu_derivative = forward_propagation(mini_batch_X, W, mini_batch_C, B)
+            loss, relu_derivatives, x_history = forward_propagation(mini_batch_X, W, mini_batch_C, B)
 
-            W, B = backward_propagation(mini_batch_X, W, mini_batch_C, B, relu_derivative, learning_rate)
+            W, B = backward_propagation(mini_batch_X, W, mini_batch_C, B, relu_derivatives, x_history,  learning_rate)
 
 
 # returns the gradient of the layer with respect to b as a matrix (why not as a vector?)
@@ -458,39 +469,39 @@ if __name__ == "__main__":
     # =============================          Eran's Data        ======================================
     # ================================================================================================
     # ================================================================================================
-    #  Gmm = 'GMMData.mat'
-    # Peaks = 'PeaksData.mat'
-    # SwissRoll = 'SwissRollData.mat'
-    #
-    # example_data = Gmm
-    # Ct, Cv, Yt, Yv = load_data_set(example_data)
-    # # adding bias
-    # m = Yt.shape[1]
-    # bias_row = np.ones(m)
-    # Yt = np.vstack([Yt, bias_row])
-    #
-    # m = Yv.shape[1]
-    # bias_row = np.ones(m)
-    # Yv = np.vstack([Yv, bias_row])
-    #
-    # n = Yt.shape[0]
-    # l = Ct.shape[0]
-    #
-    # W = np.ones((n, l))
-    # learning_rate = 0.1
-    # batch_size = 10_000
-    # history, W, train_success_rate, validation_success_rate, epoch_data, train_rate_data, validation_rate_data\
-    #     = stochastic_gradient_descent(Yt, W, Ct, Yv, Cv, max_iter=10_000)
-    # print("after running SGD on: " + example_data + " train success rate is: " + str(train_success_rate * 100) + "%" + "  validation success rate is: "
-    #       + str(validation_success_rate * 100) + "%" + " learning rate is : " + str(learning_rate)
-    #       + " mini_batch size is " + str(batch_size))
-    #
-    # plot_results()
-    # ================================================================================================
-    # ================================================================================================
-    # =============================             MNIST           ======================================
-    # ================================================================================================
-    # ================================================================================================
+    Gmm = 'GMMData.mat'
+    Peaks = 'PeaksData.mat'
+    SwissRoll = 'SwissRollData.mat'
+
+    example_data = Gmm
+    Ct, Cv, Yt, Yv = load_data_set(example_data)
+    # adding bias
+    m = Yt.shape[1]
+    bias_row = np.ones(m)
+    Yt = np.vstack([Yt, bias_row])
+
+    m = Yv.shape[1]
+    bias_row = np.ones(m)
+    Yv = np.vstack([Yv, bias_row])
+
+    n = Yt.shape[0]
+    l = Ct.shape[0]
+
+    W = np.ones((n, l))
+    learning_rate = 0.1
+    batch_size = 10_000
+    history, W, train_success_rate, validation_success_rate, epoch_data, train_rate_data, validation_rate_data\
+        = stochastic_gradient_descent(Yt, W, Ct, Yv, Cv, max_iter=10_000)
+    print("after running SGD on: " + example_data + " train success rate is: " + str(train_success_rate * 100) + "%" + "  validation success rate is: "
+          + str(validation_success_rate * 100) + "%" + " learning rate is : " + str(learning_rate)
+          + " mini_batch size is " + str(batch_size))
+
+    plot_results()
+# ================================================================================================
+# ================================================================================================
+# =============================             MNIST           ======================================
+# ================================================================================================
+# ================================================================================================
 
     running_on_mnist_data_set()
 # ================================================================================================

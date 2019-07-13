@@ -421,12 +421,12 @@ def running_on_mnist_data_set():
     res = predict(W, X)
 
     print(sum(res - Y != 0))
-    print("the number of labeled train data: " + Y.shape[0])
+    print("the number of labeled train data: " + str(Y.shape[0]))
 
     res = predict(W, Xtest)
 
     print(sum(res - Ytest != 0))
-    print("the number of labeled validation data: " + Y.shape[0])
+    print("the number of labeled validation data: " + str(Y.shape[0]))
 
 
 def load_data_set(data_set_name):

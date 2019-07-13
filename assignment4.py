@@ -2,208 +2,7 @@ import scipy.io
 import numpy as np
 import mnist_handler
 import matplotlib.pyplot as plt
-
-
-# returns a matrix with n columns of copies of column vector vec of size m
-def pump(vec, m, n, transpose=True):
-    res = np.broadcast_to(vec, (n, m))
-    if transpose:
-        res = np.transpose(res)
-    return res
-
-
-def softmax_objective(X, W, C):
-    m = X.shape[1]
-    l = W.shape[1]
-
-    Xt = X.transpose()
-    XtW = np.matmul(Xt, W)
-
-    eta = XtW.max(axis=1)
-
-    # pumping into matrix with shape (m,l)
-    eta = pump(eta, m, l)
-
-    num = np.exp(XtW - eta)
-
-    # summing rows to get denominator
-    den = num.sum(axis=1)
-
-    # pumping into matrix with shape (m,l)
-    den = pump(den, m, l)
-
-    logDXtW = np.log(num / den)
-
-    res = 0
-
-    for i in range(l):
-        res += sum(C[i, :] * logDXtW[:, i])
-
-    return res * (-1 / m)
-
-
-# computes the softmax gradient for all weight vectors (W) together
-def softmax_gradient(X, W, C):
-    m = X.shape[1]
-    l = W.shape[1]
-
-    Xt = X.transpose()
-
-    XtW = np.matmul(Xt, W)
-
-    eta = XtW.max(axis=1)
-    # pumping into matrix with shape (m,l)
-    eta = pump(eta, m, l)
-
-    num = np.exp(XtW - eta)
-    # summing rows to get denominator
-    den = num.sum(axis=1)
-
-    # pumping into matrix with shape (m,l)
-    den = pump(den, m, l)
-
-    DexpXtw = num / den
-
-    return (1 / m) * np.matmul(X, DexpXtw - C.transpose())
-
-
-# gradient by X used for back propagation
-def softmax_data_gradient(X, W, C):
-    m = X.shape[1]
-    l = W.shape[1]
-
-    Wt = W.transpose()
-
-    WtX = np.matmul(Wt, X)
-
-    eta = WtX.max(axis=1)
-    # pumping into matrix with shape (m,l)
-    eta = pump(eta, l, m)
-
-    # num = np.exp(WtX - eta)
-    num = np.exp(WtX)
-    # summing rows to get denominator
-    den = num.sum(axis=0)
-
-    # pumping into matrix with shape (m,l)
-    den = pump(den, m, l, False)
-
-    DexpWtX = num / den
-
-    return (1 / m) * np.matmul(W, DexpWtX - C)
-
-
-# an envelope function used in gradient testing
-def func_w(X, W, C, w):
-    W1 = np.zeros(W.shape)
-    W1 += W
-    W1[:, 0] = w
-    return softmax_objective(X, W1, C)
-
-
-# an envelope function used in gradient testing
-def gradient_w(X, W, C, w):
-    W1 = np.zeros(W.shape)
-    W1 += W
-    W1[:, 0] = w
-    return softmax_gradient(X, W1, C)
-
-
-# an envelope function used in gradient testing
-def func_x(X, W, C, x):
-    X1 = np.zeros(X.shape)
-    X1 += X
-    X1[:, 0] = x
-    return softmax_objective(X1, W, C)
-
-
-# an envelope function used in gradient testing
-def gradient_x(X, W, C, x):
-    X1 = np.zeros(X.shape)
-    X1 += X
-    X1[:, 0] = x
-    return softmax_data_gradient(X1, W, C)
-
-
-# SGD - this algorithm takes the data,  the weights and the labels and it's learning the weights the optimize
-# the softmax objective function
-def stochastic_gradient_descent(X, W, C, x_valid=None, c_valid=None, max_iter=600, learning_rate=0.02,
-                                batch_size=10_000, train_rate_data=[], validation_rate_data=[], epoch_data=[]):
-    history = []
-
-    # c_training = C
-    # c_validation = c_valid
-    # if not is_mnist_data:
-        # converting labels to numeral form in order to calculate success rates
-    labels = np.arange(C.shape[0])
-
-    training_labels = pump(labels, C.shape[0], C.shape[1])
-    c_training = (C * training_labels).sum(axis=0)
-
-    validation_labels = pump(labels, c_valid.shape[0], c_valid.shape[1])
-    c_validation = (c_valid * validation_labels).sum(axis=0)
-
-    for i in range(max_iter):
-        num_of_mini_batches = round(X.shape[1] / batch_size)
-        perm = np.random.permutation(X.shape[1])
-
-        learning_rate = 1 / np.sqrt(i + 1)
-
-        for j in range(num_of_mini_batches):
-            batch_indexes = perm[(j * batch_size):((j + 1) * batch_size)];
-            # iterating over all mini batches
-            mini_batch_x = X[:, batch_indexes]
-            mini_batch_c = C[:, batch_indexes]
-
-            # iterate over the mini_batch [previous_index, ... next_index]
-
-            # grad = 0
-            # for l in range(batch_size):
-            #     grad += softmax_gradient_single(mini_batch_X[:,l], W, mini_batch_C[:,l])
-            # grad = (1/batch_size)*grad
-
-            grad = softmax_gradient(mini_batch_x, W, mini_batch_c)
-
-            W = W - learning_rate * grad
-
-        train_success_rate, validation_success_rate = check_predication(W, X, x_valid, c_training, c_validation)
-        history.append([train_success_rate, validation_success_rate])
-
-        if i % 100 == 0:
-            print('loss: ', softmax_objective(X, W, C), ' epoch: ', i)
-
-            print("train success rate is: " + str(train_success_rate * 100) + "%" + "  validation success rate is: "
-                  + str(validation_success_rate * 100) + "%")
-            # appending data for the plots
-            train_rate_data.append(train_success_rate * 100)
-            validation_rate_data.append(validation_success_rate * 100)
-            epoch_data.append(i)
-
-    return history, W, train_success_rate, validation_success_rate, epoch_data, train_rate_data, validation_rate_data
-
-
-def check_predication(W, X, Xvalid, c_training, c_validation, num_of_samples=1000):
-    training_idx = np.random.randint(0, X.shape[1] - 1, num_of_samples)
-    validation_idx = np.random.randint(0, Xvalid.shape[1] - 1, num_of_samples)
-    training_pred = predict(W, X[:, training_idx])
-    # for debugging
-    # check_train = Ctraining[training_idx]
-    train_errors = training_pred - c_training[training_idx]
-
-    validation_pred = predict(W, Xvalid[:, validation_idx])
-    # for debugging
-    # check_valid = c_validation[validation_idx]
-    validation_errors = (validation_pred - c_validation[validation_idx])
-    train_success = sum(train_errors == 0) / num_of_samples
-    validation_success = sum(validation_errors == 0) / num_of_samples
-    return train_success, validation_success
-
-
-# uses the weights W in order to predict the values of X
-def predict(W, X):
-    prob = np.matmul(X.transpose(), W)
-    res = prob.argmax(axis=1)
-    return res
+import stochastic_gradient_descent as sgd
 
 
 # calculates the value of ReLU(X)
@@ -251,7 +50,7 @@ def forward_propagation(W, X, B, C):
         x_i = ReLU(np.matmul(W[i], x_i) + B[i])
         relu_derivatives.append(x_i > 0)
 
-    return softmax_objective(X, W, C), relu_derivatives, x_history
+    return sgd.softmax_objective(X, W, C), relu_derivatives, x_history
 
 
 # going through each layer and preforming the gradient descent on the biases
@@ -259,10 +58,10 @@ def forward_propagation(W, X, B, C):
 def backward_propagation(W, X, B, C, relu_derivative, x_history, learning_rate):
 
     # last layer gradient decent
-    grad = softmax_gradient(X, W[-1], C)
+    grad = sgd.softmax_gradient(X, W[-1], C)
     W[-1] = W[-1] - learning_rate * grad
 
-    x_grad = softmax_data_gradient(X, W, C)
+    x_grad = grad.softmax_data_gradient(X, W, C)
 
     # going through all hidden layers
     for i in range(B.shape[0] - 1, -1, -1):
@@ -295,77 +94,6 @@ def NN_SGD(X, C, layer_sizes, max_iter=50, learning_rate=0.02, batch_size=1000):
             loss, relu_derivatives, x_history = forward_propagation(mini_batch_X, W, mini_batch_C, B)
 
             W, B = backward_propagation(mini_batch_X, W, mini_batch_C, B, relu_derivatives, x_history,  learning_rate)
-
-
-# returns the gradient of the layer with respect to b as a matrix (why not as a vector?)
-def ReLU_Gradient_by_b(W, X, b):
-    return np.diag((np.matmul(W, X) + b) > 0)
-
-
-def gradient_test_x():
-    global X, W, C
-    # Gradient testing (x)
-    print("gradient testing by x")
-    X = np.random.rand(3, 5)
-    W = np.random.rand(3, 3)
-    c = np.random.randint(0, 3, 5)
-    C = np.asarray([c == 0, c == 1, c == 2])
-    x = X[:, 0]
-    d = np.random.rand(3)
-    epsilon = 1
-    f = lambda x: func_x(X, W, C, x)
-    gradf = lambda x: gradient_x(X, W, C, x)
-    curr = f(x)
-    last = f(x)
-    for i in range(10):
-        last = curr
-        epsilon = epsilon * 0.5
-        curr = abs(f(x + epsilon * d) - f(x))
-        print('ratio 1 is: ', curr / last)
-    d = np.random.rand(3)
-    epsilon = 0.2
-    curr = f(x)
-    last = f(x)
-    for i in range(10):
-        last = curr
-        epsilon = epsilon * 0.5
-        curr = abs(f(x + epsilon * d) - f(x) - epsilon * sum(d * gradf(x)[:, 0]))
-        print('ratio 2 is: ', curr / last)
-
-
-def gradient_test_by_w():
-    global W, C, X
-    A = np.asarray([[1, 1, 4], [1, 1, 1]])
-    W = np.asarray([[0, 0, 1, 0, 0, 0], [0, 0, 0, 0, 0, 1]])
-    C = np.asarray([[0, 0, 0], [0, 0, 0], [1, 0, 0], [0, 0, 1], [0, 0, 0], [0, 1, 0]])
-    print(softmax_objective(A, W, C))
-    # Gradient testing (w)
-    print("gradient test by w")
-    X = np.random.rand(3, 5)
-    W = np.random.rand(3, 3)
-    c = np.random.randint(0, 3, 5)
-    C = np.asarray([c == 0, c == 1, c == 2])
-    w = W[:, 0]
-    d = np.random.rand(3)
-    epsilon = 1
-    f = lambda w: func_w(X, W, C, w)
-    gradf = lambda w: gradient_w(X, W, C, w)
-    curr = f(w)
-    last = f(w)
-    for i in range(10):
-        last = curr
-        epsilon = epsilon * 0.5
-        curr = abs(f(w + epsilon * d) - f(w))
-        print('ratio 1 is: ', curr / last)
-    d = np.random.rand(3)
-    epsilon = 0.2
-    curr = f(w)
-    last = f(w)
-    for i in range(10):
-        last = curr
-        epsilon = epsilon * 0.5
-        curr = abs(f(w + epsilon * d) - f(w) - epsilon * sum(d * (gradf(w)[:, 0])))
-        print('ratio 2 is: ', curr / last)
 
 
 def running_on_mnist_data_set():
@@ -405,7 +133,6 @@ def running_on_mnist_data_set():
     for i in range(10):
         c_test[i, :] = Ytest == i
 
-
     X.shape = (X.shape[0], X.shape[1] * X.shape[2])
 
     print(X.shape)
@@ -426,15 +153,15 @@ def running_on_mnist_data_set():
     W = np.zeros((n + 1, l))
 
     history, W,  train_success_rate, validation_success_rate, epoch_data, train_rate_data, validation_rate_data\
-        = stochastic_gradient_descent(X, W, C, is_mnist_data=True, x_valid=Xtest, c_valid=c_test)
+        = sgd.stochastic_gradient_descent(X, W, C, is_mnist_data=True, x_valid=Xtest, c_valid=c_test)
 
     plot_results(epoch_data,train_rate_data, validation_rate_data, "MNIST")
-    res = predict(W, X)
+    res = sgd.predict(W, X)
 
     print(sum(res - Y != 0))
     print("the number of labeled train data: " + str(Y.shape[0]))
 
-    res = predict(W, Xtest)
+    res = sgd.predict(W, Xtest)
 
     print(sum(res - Ytest != 0))
     print("the number of labeled validation data: " + str(Y.shape[0]))
@@ -491,7 +218,7 @@ if __name__ == "__main__":
     learning_rate = 0.1
     batch_size = 10_000
     history, W, train_success_rate, validation_success_rate, epoch_data, train_rate_data, validation_rate_data\
-        = stochastic_gradient_descent(Yt, W, Ct, Yv, Cv, max_iter=10_000)
+        = sgd.stochastic_gradient_descent(Yt, W, Ct, Yv, Cv, max_iter=10_000)
     print("after running SGD on: " + example_data + " train success rate is: " + str(train_success_rate * 100) + "%" + "  validation success rate is: "
           + str(validation_success_rate * 100) + "%" + " learning rate is : " + str(learning_rate)
           + " mini_batch size is " + str(batch_size))

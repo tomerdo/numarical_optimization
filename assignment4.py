@@ -76,7 +76,7 @@ def backward_propagation(W, X, B, C, relu_derivative, x_history, learning_rate):
     return W, B
 
 
-def nn_sgd(X, C, layer_sizes, max_iter=50, x_valid=None, c_valid=None, learning_rate=0.1, batch_size=1000):
+def nn_sgd(X, C, layer_sizes, max_iter=50, x_valid=None, c_valid=None, learning_rate=0.1, batch_size=1000, train_rate_data=[], validation_rate_data=[], epoch_data=[]):
 
     W, B = build_layers(X.shape[0], C.shape[0], layer_sizes)
     c_training, c_validation =  sgd.rearrange_labels(C, c_valid)
@@ -108,6 +108,11 @@ def nn_sgd(X, C, layer_sizes, max_iter=50, x_valid=None, c_valid=None, learning_
             train_success_rate, validation_success_rate = check_predication(W, X, B,  x_valid, c_training, c_validation)
             print("train success rate is: " + str(train_success_rate * 100) + "%" + "  validation success rate is: "
                   + str(validation_success_rate * 100) + "%")
+            train_rate_data.append(train_success_rate * 100)
+            validation_rate_data.append(validation_success_rate * 100)
+            epoch_data.append(i)
+
+    return train_rate_data, validation_rate_data, epoch_data
 
 
 def running_on_mnist_data_set():
@@ -166,12 +171,12 @@ def running_on_mnist_data_set():
 
     W = np.zeros((n + 1, l))
 
-    nn_sgd(X, C, [3, 4, 6],  x_valid=Xtest, c_valid=c_test)
+    train_success_rate, validation_success_rate, epoch_data = nn_sgd(X, C, [3, 4, 6],  x_valid=Xtest, c_valid=c_test)
 
     history, W,  train_success_rate, validation_success_rate, epoch_data, train_rate_data, validation_rate_data\
         = sgd.stochastic_gradient_descent(X, W, C, x_valid=Xtest, c_valid=c_test)
 
-    plot_results(epoch_data,train_rate_data, validation_rate_data, "MNIST")
+    plot_results(epoch_data, train_rate_data, validation_rate_data, "MNIST")
     res = sgd.predict(W, X)
 
     print(sum(res - Y != 0))
@@ -213,6 +218,7 @@ def print_result(example_data, train_success_rate, validation_success_rate, lear
           + str(validation_success_rate * 100) + "%" + " learning rate is : " + str(learning_rate)
           + " mini_batch size is " + str(batch_size))
 
+
 def predict(W, X, B):
     x_i = X
     for i in range(B.shape[0]):
@@ -250,7 +256,7 @@ if __name__ == "__main__":
     Peaks = 'PeaksData.mat'
     SwissRoll = 'SwissRollData.mat'
 
-    example_data = SwissRoll
+    example_data = Peaks
     Ct, Cv, Yt, Yv = load_data_set(example_data)
     # adding bias
     m = Yt.shape[1]
@@ -301,5 +307,7 @@ if __name__ == "__main__":
 # =============================       RUNNING NN (question 4 - 7)      ===========================
 # ================================================================================================
 # ================================================================================================
-    nn_sgd(Yt, Ct, layer_sizes=[5, 5, 4, 4, 8, 5, 2, 3, 12], max_iter=10_000, x_valid=Yv, c_valid = Cv)
+    train_rate_data, validation_rate_data, epoch_data = nn_sgd(Yt, Ct, layer_sizes=[5, 5, 4, 4, 8, 5, 2, 3, 12],
+                                                               max_iter=1_000, x_valid=Yv, c_valid = Cv)
+    plot_results(epoch_data, train_rate_data, validation_rate_data, "NN " + example_data)
 # running_on_mnist_data_set()

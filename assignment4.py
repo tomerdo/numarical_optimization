@@ -126,7 +126,7 @@ def running_on_mnist_data_set():
 
     bias_row = np.ones(Xtest.shape[0])
     Xtest = Xtest.transpose()
-    Xtest = np.vstack([Xtest, bias_row])
+    # Xtest = np.vstack([Xtest, bias_row])
 
     print(X.shape)
     print(Y.shape)
@@ -159,12 +159,14 @@ def running_on_mnist_data_set():
 
     bias_row = np.ones(m)
 
-    X = np.vstack([X, bias_row])
+    # X = np.vstack([X, bias_row])
 
     W = np.zeros((n + 1, l))
 
+    # nn_sgd(X, C, [3, 4, 6])
+
     history, W,  train_success_rate, validation_success_rate, epoch_data, train_rate_data, validation_rate_data\
-        = sgd.stochastic_gradient_descent(X, W, C, is_mnist_data=True, x_valid=Xtest, c_valid=c_test)
+        = sgd.stochastic_gradient_descent(X, W, C, x_valid=Xtest, c_valid=c_test)
 
     plot_results(epoch_data,train_rate_data, validation_rate_data, "MNIST")
     res = sgd.predict(W, X)
@@ -219,14 +221,14 @@ if __name__ == "__main__":
     Peaks = 'PeaksData.mat'
     SwissRoll = 'SwissRollData.mat'
 
-    example_data = SwissRoll
+    example_data = Peaks
     Ct, Cv, Yt, Yv = load_data_set(example_data)
     # adding bias
-    # m = Yt.shape[1]
+    m = Yt.shape[1]
     # bias_row = np.ones(m)
     # Yt = np.vstack([Yt, bias_row])
-    #
-    # m = Yv.shape[1]
+
+    m = Yv.shape[1]
     # bias_row = np.ones(m)
     # Yv = np.vstack([Yv, bias_row])
 
@@ -239,12 +241,12 @@ if __name__ == "__main__":
     # ================================================================================================
     # ================================================================================================
 
-    W = np.ones((n, l))
+    W = np.ones((n+1, l))
     learning_rate = 0.1
     batch_size = 10_000
     # history, W, train_success_rate, validation_success_rate, epoch_data, train_rate_data, validation_rate_data\
     #     = sgd.stochastic_gradient_descent(Yt, W, Ct, Yv, Cv, max_iter=1_000)
-
+    #
     # print_result(example_data, train_success_rate, validation_success_rate, learning_rate, batch_size)
     # plot_results(epoch_data, train_rate_data, validation_rate_data, example_data)
 
@@ -271,3 +273,4 @@ if __name__ == "__main__":
 # ================================================================================================
 # ================================================================================================
     nn_sgd(Yt, Ct, layer_sizes=[5, 5, 4, 4, 8, 5, 2, 3, 12], max_iter=10_000)
+# running_on_mnist_data_set()

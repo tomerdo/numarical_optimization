@@ -6,6 +6,10 @@ import gradients as grads
 
 
 def softmax_objective(X, W, C):
+    bias_row = np.ones(X.shape[1])
+    X = np.vstack([X, bias_row])
+
+
     m = X.shape[1]
     l = W.shape[1]
 

@@ -49,7 +49,7 @@ def forward_propagation(W, X, B):
     x_history.append(x_i)
     for i in range(B.shape[0]):
         mul_res = np.matmul(W[i], x_i)
-        x_i = ReLU(np.matmul(W[i], x_i) + grads.pump(B[i], mul_res.shape[0], mul_res.shape[1]))
+        x_i = ReLU(mul_res + grads.pump(B[i], mul_res.shape[0], mul_res.shape[1]))
         x_history.append(x_i)
         relu_derivatives.append(x_i > 0)
 
@@ -76,10 +76,10 @@ def backward_propagation(W, X, B, C, relu_derivative, x_history, learning_rate):
     return W, B
 
 
-def nn_sgd(X, C, layer_sizes, max_iter=50, learning_rate=0.1, batch_size=1000):
+def nn_sgd(X, C, layer_sizes, max_iter=50, x_valid=None, c_valid=None, learning_rate=0.1, batch_size=1000):
 
     W, B = build_layers(X.shape[0], C.shape[0], layer_sizes)
-
+    c_training, c_validation =  sgd.rearrange_labels(C, c_valid)
     x_loss = np.zeros((layer_sizes[-1], X.shape[1]))
 
     for i in range(max_iter):
@@ -105,6 +105,9 @@ def nn_sgd(X, C, layer_sizes, max_iter=50, learning_rate=0.1, batch_size=1000):
         if i % 100 == 0:
             # results are affected only by the last W layer
             print('loss: ', sgd.softmax_objective(x_loss, np.transpose(W[-1]), C), ' epoch: ', i)
+            train_success_rate, validation_success_rate = check_predication(W, X, B,  x_valid, c_training, c_validation)
+            print("train success rate is: " + str(train_success_rate * 100) + "%" + "  validation success rate is: "
+                  + str(validation_success_rate * 100) + "%")
 
 
 def running_on_mnist_data_set():
@@ -126,7 +129,7 @@ def running_on_mnist_data_set():
 
     bias_row = np.ones(Xtest.shape[0])
     Xtest = Xtest.transpose()
-    Xtest = np.vstack([Xtest, bias_row])
+    # Xtest = np.vstack([Xtest, bias_row])
 
     print(X.shape)
     print(Y.shape)
@@ -159,12 +162,14 @@ def running_on_mnist_data_set():
 
     bias_row = np.ones(m)
 
-    X = np.vstack([X, bias_row])
+    # X = np.vstack([X, bias_row])
 
     W = np.zeros((n + 1, l))
 
+    nn_sgd(X, C, [3, 4, 6],  x_valid=Xtest, c_valid=c_test)
+
     history, W,  train_success_rate, validation_success_rate, epoch_data, train_rate_data, validation_rate_data\
-        = sgd.stochastic_gradient_descent(X, W, C, is_mnist_data=True, x_valid=Xtest, c_valid=c_test)
+        = sgd.stochastic_gradient_descent(X, W, C, x_valid=Xtest, c_valid=c_test)
 
     plot_results(epoch_data,train_rate_data, validation_rate_data, "MNIST")
     res = sgd.predict(W, X)
@@ -208,6 +213,32 @@ def print_result(example_data, train_success_rate, validation_success_rate, lear
           + str(validation_success_rate * 100) + "%" + " learning rate is : " + str(learning_rate)
           + " mini_batch size is " + str(batch_size))
 
+def predict(W, X, B):
+    x_i = X
+    for i in range(B.shape[0]):
+        mul_res = np.matmul(W[i], x_i)
+        x_i = ReLU(mul_res + grads.pump(B[i], mul_res.shape[0], mul_res.shape[1]))
+    prob = sgd.softmax(x_i, np.transpose(W[-1]))
+    res = prob.argmax(axis=1)
+    return res
+
+
+def check_predication(W, X, B, Xvalid, c_training, c_validation, num_of_samples=1000):
+    training_idx = np.random.randint(0, X.shape[1] - 1, num_of_samples)
+    validation_idx = np.random.randint(0, Xvalid.shape[1] - 1, num_of_samples)
+    training_pred = predict(W, X[:, training_idx], B)
+    # for debugging
+    # check_train = Ctraining[training_idx]
+    train_errors = training_pred - c_training[training_idx]
+
+    validation_pred = predict(W, Xvalid[:, validation_idx], B)
+    # for debugging
+    # check_valid = c_validation[validation_idx]
+    validation_errors = (validation_pred - c_validation[validation_idx])
+    train_success = sum(train_errors == 0) / num_of_samples
+    validation_success = sum(validation_errors == 0) / num_of_samples
+    return train_success, validation_success
+
 
 if __name__ == "__main__":
     # ================================================================================================
@@ -222,11 +253,11 @@ if __name__ == "__main__":
     example_data = SwissRoll
     Ct, Cv, Yt, Yv = load_data_set(example_data)
     # adding bias
-    # m = Yt.shape[1]
+    m = Yt.shape[1]
     # bias_row = np.ones(m)
     # Yt = np.vstack([Yt, bias_row])
-    #
-    # m = Yv.shape[1]
+
+    m = Yv.shape[1]
     # bias_row = np.ones(m)
     # Yv = np.vstack([Yv, bias_row])
 
@@ -239,12 +270,12 @@ if __name__ == "__main__":
     # ================================================================================================
     # ================================================================================================
 
-    W = np.ones((n, l))
-    learning_rate = 0.1
-    batch_size = 10_000
+    # W = np.ones((n+1, l))
+    # learning_rate = 0.1
+    # batch_size = 10000
     # history, W, train_success_rate, validation_success_rate, epoch_data, train_rate_data, validation_rate_data\
     #     = sgd.stochastic_gradient_descent(Yt, W, Ct, Yv, Cv, max_iter=1_000)
-
+    #
     # print_result(example_data, train_success_rate, validation_success_rate, learning_rate, batch_size)
     # plot_results(epoch_data, train_rate_data, validation_rate_data, example_data)
 
@@ -270,4 +301,5 @@ if __name__ == "__main__":
 # =============================       RUNNING NN (question 4 - 7)      ===========================
 # ================================================================================================
 # ================================================================================================
-    nn_sgd(Yt, Ct, layer_sizes=[5, 5, 4, 4, 8, 5, 2, 3, 12], max_iter=10_000)
+    nn_sgd(Yt, Ct, layer_sizes=[5, 5, 4, 4, 8, 5, 2, 3, 12], max_iter=10_000, x_valid=Yv, c_valid = Cv)
+# running_on_mnist_data_set()

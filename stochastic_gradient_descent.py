@@ -39,6 +39,34 @@ def softmax_objective(X, W, C):
     return res * (-1 / m)
 
 
+def softmax(X, W):
+    bias_row = np.ones(X.shape[1])
+    X = np.vstack([X, bias_row])
+
+
+    m = X.shape[1]
+    l = W.shape[1]
+
+    Xt = X.transpose()
+    XtW = np.matmul(Xt, W)
+
+    eta = XtW.max(axis=1)
+
+    # pumping into matrix with shape (m,l)
+    eta = grads.pump(eta, m, l)
+
+    num = np.exp(XtW - eta)
+
+    # summing rows to get denominator
+    den = num.sum(axis=1)
+
+    # pumping into matrix with shape (m,l)
+    den = grads.pump(den, m, l)
+    return num / den
+
+
+
+
 def check_predication(W, X, Xvalid, c_training, c_validation, num_of_samples=1000):
     training_idx = np.random.randint(0, X.shape[1] - 1, num_of_samples)
     validation_idx = np.random.randint(0, Xvalid.shape[1] - 1, num_of_samples)
@@ -58,9 +86,7 @@ def check_predication(W, X, Xvalid, c_training, c_validation, num_of_samples=100
 
 # uses the weights W in order to predict the values of X
 def predict(W, X):
-    bias_row = np.ones(X.shape[1])
-    X = np.vstack([X, bias_row])
-    prob = np.matmul(X.transpose(), W)
+    prob = softmax(X, W)
     res = prob.argmax(axis=1)
     return res
 

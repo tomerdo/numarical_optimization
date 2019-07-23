@@ -25,18 +25,18 @@ def build_layers(data_dimension, num_of_classes, layer_sizes):
     # building hidden layers
     for i in range(num_of_layers):
         layer_size_i = layer_sizes[i]
-        W_i = np.zeros((last_dim, layer_size_i))
+        W_i = np.zeros((layer_size_i, last_dim))
         b_i = np.zeros(layer_size_i)
         last_dim = layer_size_i
         W.append(W_i)
         B.append(b_i)
 
     # adding the last layer, +1 is for biases
-    w_last_layer = np.zeros((last_dim + 1, num_of_classes))
+    w_last_layer = np.zeros((num_of_classes, last_dim + 1))
     W.append(w_last_layer)
     W = np.asarray(W)
 
-    return np.transpose(W), np.asarray(B)
+    return W, np.asarray(B)
     # return np.asanyarray(), B
 
 # calculates the forward propagation of the NN and returns the current loss
@@ -46,11 +46,11 @@ def forward_propagation(W, X, B):
     relu_derivatives = []
     x_history = []
     x_i = X
-
+    x_history.append(x_i)
     for i in range(B.shape[0]):
-        x_history.append(x_i)
         mul_res = np.matmul(W[i], x_i)
         x_i = ReLU(np.matmul(W[i], x_i) + grads.pump(B[i], mul_res.shape[0], mul_res.shape[1]))
+        x_history.append(x_i)
         relu_derivatives.append(x_i > 0)
 
     return relu_derivatives, x_history
@@ -60,12 +60,12 @@ def forward_propagation(W, X, B):
 # and the weights.
 def backward_propagation(W, X, B, C, relu_derivative, x_history, learning_rate):
     # last layer gradient decent
-    grad = grads.softmax_gradient(x_history[-1], W[-1], C)
-    W[-1] = W[-1] - learning_rate * grad
+    grad = grads.softmax_gradient(x_history[-1], np.transpose(W[-1]), C)
+    W[-1] = W[-1] - learning_rate * np.transpose(grad)
 
     temp_w = W[-1]
     # loss function gradient w.r.t X , excluding the last row of W ( the biases row)
-    x_grad = grads.softmax_data_gradient(x_history[-1], temp_w[:-1], C)
+    x_grad = grads.softmax_data_gradient(x_history[-1], np.transpose(temp_w[:, :-1]), C)
 
     # going through all hidden layers
     for i in range(B.shape[0] - 1, -1, -1):
@@ -76,9 +76,11 @@ def backward_propagation(W, X, B, C, relu_derivative, x_history, learning_rate):
     return W, B
 
 
-def nn_sgd(X, C, layer_sizes, max_iter=50, learning_rate=0.02, batch_size=1000):
+def nn_sgd(X, C, layer_sizes, max_iter=50, learning_rate=0.1, batch_size=1000):
 
     W, B = build_layers(X.shape[0], C.shape[0], layer_sizes)
+
+    x_loss = np.zeros((layer_sizes[-1], X.shape[1]))
 
     for i in range(max_iter):
         num_of_mini_batches = round(X.shape[1] / batch_size)
@@ -97,9 +99,12 @@ def nn_sgd(X, C, layer_sizes, max_iter=50, learning_rate=0.02, batch_size=1000):
 
             W, B = backward_propagation(W, mini_batch_x, B, mini_batch_c, relu_derivatives, x_history, learning_rate)
 
+            if i % 100 == 0:
+                x_loss[:, batch_indexes] = x_history[-1]
+
         if i % 100 == 0:
             # results are affected only by the last W layer
-            print('loss: ', sgd.softmax_objective(X, W[-1], C), ' epoch: ', i)
+            print('loss: ', sgd.softmax_objective(x_loss, np.transpose(W[-1]), C), ' epoch: ', i)
 
 
 def running_on_mnist_data_set():
@@ -214,7 +219,7 @@ if __name__ == "__main__":
     Peaks = 'PeaksData.mat'
     SwissRoll = 'SwissRollData.mat'
 
-    example_data = Gmm
+    example_data = SwissRoll
     Ct, Cv, Yt, Yv = load_data_set(example_data)
     # adding bias
     # m = Yt.shape[1]
@@ -265,4 +270,4 @@ if __name__ == "__main__":
 # =============================       RUNNING NN (question 4 - 7)      ===========================
 # ================================================================================================
 # ================================================================================================
-    nn_sgd(Yt, Ct, layer_sizes=[5, 5, 5], max_iter=10_000)
+    nn_sgd(Yt, Ct, layer_sizes=[5, 5, 4, 4, 8, 5, 2, 3, 12], max_iter=10_000)

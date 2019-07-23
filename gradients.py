@@ -40,6 +40,7 @@ def softmax_gradient(X, W, C):
 
 # gradient by X used for back propagation
 def softmax_data_gradient(X, W, C):
+
     m = X.shape[1]
     l = W.shape[1]
 

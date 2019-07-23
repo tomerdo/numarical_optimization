@@ -59,13 +59,8 @@ def forward_propagation(W, X, B):
 # going through each layer and preforming the gradient descent on the biases
 # and the weights.
 def backward_propagation(W, X, B, C, relu_derivative, x_history, learning_rate):
-
-    # adding bias row to the softmax data
-    bias_row = np.ones(X.shape[1])
-    x_softmax = np.vstack([x_history[-1], bias_row])
-
     # last layer gradient decent
-    grad = grads.softmax_gradient(x_softmax, W[-1], C)
+    grad = grads.softmax_gradient(x_history[-1], W[-1], C)
     W[-1] = W[-1] - learning_rate * grad
 
     temp_w = W[-1]
@@ -82,6 +77,7 @@ def backward_propagation(W, X, B, C, relu_derivative, x_history, learning_rate):
 
 
 def nn_sgd(X, C, layer_sizes, max_iter=50, learning_rate=0.02, batch_size=1000):
+
     W, B = build_layers(X.shape[0], C.shape[0], layer_sizes)
 
     for i in range(max_iter):

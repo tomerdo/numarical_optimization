@@ -135,13 +135,13 @@ def JacV_w(X, der, V):
 
 
 
-def JacV_x(W, relu_derivative, V):
+def JacV_x(W, der, V):
     m = V.shape[1]
     k = W.shape[0]
     n = W.shape[1]
 
     # # this works, but might also be very bad
-    # der = relu_derivative.flatten('F').reshape(k * m, 1)
+    # der = der.flatten('F').reshape(k * m, 1)
     #
     # # v = V.reshape(v_shape[0] * v_shape[1], 1)
     # v = V.flatten('F').reshape(k * m, 1)
@@ -156,18 +156,19 @@ def JacV_x(W, relu_derivative, V):
 
 
     # THIS WORKS BUT IS BAD
-    res = np.zeros((n, m))
+    # res = np.zeros((n, m))
+    #
+    # for i in range(m):
+    #     res[:, i] = np.matmul(np.multiply(der[:, i].reshape(k, 1), W).transpose(), V[:, i])
+    #
+    # return res
 
-    # print(V[:, 0].reshape(k,1).shape)
-    # print(np.multiply(relu_derivative[:, 0].reshape(k, 1), W).transpose().shape)
-    # print(np.multiply(relu_derivative[:, 0].reshape(k, 1), W).transpose())
 
+    der_v = np.multiply(der, V)
 
+    w_der_v = np.matmul(W.transpose(), der_v)
 
-    for i in range(m):
-        res[:, i] = np.matmul(np.multiply(relu_derivative[:, i].reshape(k, 1), W).transpose(), V[:, i])
-
-    return res
+    return w_der_v
 
 
 

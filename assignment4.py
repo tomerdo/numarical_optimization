@@ -339,9 +339,9 @@ if __name__ == "__main__":
 
 # this explodes
 #     nn_sgd(Yt, Ct, layer_sizes=[5, 7, 12, 15, 10, 8, 10, 10, 6, 4], max_iter=10_000, x_valid=Yv, c_valid = Cv)
-    nn_sgd(Yt, Ct, layer_sizes=[5, 6, 7, 6, 5], max_iter=10_000, x_valid=Yv, c_valid = Cv)
+#     nn_sgd(Yt, Ct, layer_sizes=[5, 6, 7, 6, 5], max_iter=10_000, x_valid=Yv, c_valid = Cv)
 
 #   does not converge
-#     nn_sgd(Yt, Ct, layer_sizes=[5, 5, 6], max_iter=10_000, x_valid=Yv, c_valid = Cv)
+    nn_sgd(Yt, Ct, layer_sizes=[5, 5, 6], max_iter=10_000, x_valid=Yv, c_valid = Cv)
 
 # running_on_mnist_data_set()

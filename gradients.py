@@ -42,8 +42,8 @@ def softmax_gradient(X, W, C):
 def softmax_data_gradient(X, W, C):
 
     # # adding bias row to the softmax data
-    bias_row = np.ones(X.shape[1])
-    X = np.vstack([X, bias_row])
+    # bias_row = np.ones(X.shape[1])
+    # X = np.vstack([X, bias_row])
 
 
     m = X.shape[1]
@@ -74,13 +74,13 @@ def softmax_data_gradient(X, W, C):
 # multiplied by a vector V. Each function corresponds to a Jacobian with respect to
 # a different parameter: b, W and x.
 def JacV_b(relu_derivative, V):
-    # m = relu_derivative.shape[1]
+    m = relu_derivative.shape[1]
     #
     # r_v = np.multiply(relu_derivative, V)
     #
     # return (r_v.sum(axis=1) / m).reshape(r_v.shape)
 
-    return np.multiply(relu_derivative, V)
+    return np.multiply(relu_derivative, V).sum(axis=1)/m
 
 
 
@@ -93,9 +93,9 @@ def JacV_w(X, der, V):
     # computing relu derivative element wise multiply by V
     r_v = np.multiply(der, V)
     # computing the result of this by all the samples and return the mean
-    r_v_xt = np.matmul(r_v.transpose(), X)
+    r_v_xt = np.matmul(r_v, X.transpose())
 
-    return r_v_xt
+    return r_v_xt/m
 
     # res = np.zeros((k, m))
     #
@@ -134,50 +134,40 @@ def JacV_w(X, der, V):
     # return res
 
 
-    # ======================================================================================
-    # ======================================================================================
-    # ======================================================================================
-
-    # # this is what I calculated that should work
-    #
-    # der_x = np.matmul(relu_derivative,X.transpose())
-    #
-    # der_x_v = np.matmul(der_x, V)
-    #
-    # return der_x_v / m
-
-    # ======================================================================================
-    # ======================================================================================
-    # ======================================================================================
-
 
 def JacV_x(W, relu_derivative, V):
     m = V.shape[1]
-    k = V.shape[0]
-    n = W.shape[0]
+    k = W.shape[0]
+    n = W.shape[1]
 
-    # this works, but does not make sense.
-    der = relu_derivative.flatten('F').reshape(k * m, 1)
-
-    # v = V.reshape(v_shape[0] * v_shape[1], 1)
-    v = V.flatten('F').reshape(k * m, 1)
-
-    Wkron = np.kron(np.eye(m), W.transpose())
-
-    derW = np.multiply(der, Wkron)
-
-    derWV = np.matmul(derW, v)
-
-    return derWV.reshape(m, k).transpose()
-
-
-    # # THIS WORKS, BUT IS STILL ILLOGICAL!!!!!!
-    # res = np.zeros((n, m))
+    # # this works, but might also be very bad
+    # der = relu_derivative.flatten('F').reshape(k * m, 1)
     #
-    # for i in range(m):
-    #     res[:, i] = np.matmul(np.multiply(relu_derivative[:, i].reshape(k, 1), W.transpose()), V[:, i])
+    # # v = V.reshape(v_shape[0] * v_shape[1], 1)
+    # v = V.flatten('F').reshape(k * m, 1)
     #
-    # return res
+    # Wkron = np.kron(np.eye(m), W)
+    #
+    # derW = np.multiply(der, Wkron)
+    #
+    # derWV = np.matmul(derW.transpose(), v)
+    #
+    # return derWV.reshape(m, n).transpose()
+
+
+    # THIS WORKS BUT IS BAD
+    res = np.zeros((n, m))
+
+    # print(V[:, 0].reshape(k,1).shape)
+    # print(np.multiply(relu_derivative[:, 0].reshape(k, 1), W).transpose().shape)
+    # print(np.multiply(relu_derivative[:, 0].reshape(k, 1), W).transpose())
+
+
+
+    for i in range(m):
+        res[:, i] = np.matmul(np.multiply(relu_derivative[:, i].reshape(k, 1), W).transpose(), V[:, i])
+
+    return res
 
 
 

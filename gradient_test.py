@@ -42,7 +42,7 @@ def grad(X, W, C, v, param, column=0):
 
 def generate_random_matrices(data_dim, num_of_samples, num_of_classes):
     X = np.random.randn(data_dim, num_of_samples)
-    W = np.random.randn(data_dim, num_of_classes)
+    W = np.random.randn(num_of_classes, data_dim)
     b = np.random.randn(num_of_classes, 1)
     c = np.random.randint(0, num_of_classes, num_of_samples)
 
@@ -137,7 +137,7 @@ def simulate_propogation(X, W, b, replace=False, param = None, y=None, column=0)
 
 def test_jac_b_t_v(data_dim, num_of_samples, num_of_classes, iterations=10, epsilon=1):
 
-    f = lambda z: np.tanh(np.matmul(W.transpose(), X) + z)
+    f = lambda z: np.tanh(np.matmul(W, X) + z)
 
     # Generating random inputs for layer
     X, W, C, b = generate_random_matrices(data_dim, num_of_samples, num_of_classes)
@@ -163,7 +163,7 @@ def test_jac_b_t_v(data_dim, num_of_samples, num_of_classes, iterations=10, epsi
         last = curr
         eps *= 0.5
         b_new = b + eps * d
-        curr = norm(f(b_new) - f(b) - grads.JacV_b(der, eps * d))
+        curr = norm(f(b_new).mean(axis=1) - f(b).mean(axis=1) - grads.JacV_b(der, eps * d))
         b = b_new
         der = 1 - f(b) ** 2
         print('ratio 2 is: ', curr / last)
@@ -174,9 +174,9 @@ def test_jac_w_t_v(data_dim_1, data_dim_2, num_of_samples, iterations=10, epsilo
     # Generating random inputs for layer
     X, W, C, b = generate_random_matrices(data_dim_1, num_of_samples, data_dim_2)
 
-    f = lambda z: np.tanh(np.matmul(z.transpose(), X) + b)
+    f = lambda z: np.tanh(np.matmul(z, X) + b)
 
-    d = np.random.randn(data_dim_1, data_dim_2)
+    d = np.random.randn(data_dim_2, data_dim_1)
     eps = epsilon
     curr = norm(f(W))
 
@@ -191,10 +191,10 @@ def test_jac_w_t_v(data_dim_1, data_dim_2, num_of_samples, iterations=10, epsilo
 
     X, W, C, b = generate_random_matrices(data_dim_1, num_of_samples, data_dim_2)
 
-    f = lambda z: np.tanh(np.matmul(z.transpose(), X) + b)
+    f = lambda z: np.tanh(np.matmul(z, X) + b)
 
     # d = np.random.randn(data_dim, data_dim)
-    d = np.random.randn(data_dim_1, data_dim_2)
+    d = np.random.randn(data_dim_2, data_dim_1)
     # d[:, 0] = d[:,0] + np.random.randn(data_dim)
     eps = epsilon
     curr = norm(f(W))
@@ -227,7 +227,7 @@ def test_jac_x_t_v(data_dim_1, data_dim_2, num_of_samples, iterations=10, epsilo
     # Generating random inputs for layer
     X, W, C, b = generate_random_matrices(data_dim_1, num_of_samples, data_dim_2)
 
-    f = lambda z: np.tanh(np.matmul(W.transpose(), z) + b)
+    f = lambda z: np.tanh(np.matmul(W, z) + b)
 
     d = np.random.randn(data_dim_1, num_of_samples)
     eps = epsilon
@@ -243,7 +243,7 @@ def test_jac_x_t_v(data_dim_1, data_dim_2, num_of_samples, iterations=10, epsilo
 
     X, W, C, b = generate_random_matrices(data_dim_1, num_of_samples, data_dim_2)
 
-    f = lambda z: np.tanh(np.matmul(W.transpose(), z) + b)
+    f = lambda z: np.tanh(np.matmul(W, z) + b)
 
     print(f(X).shape)
 

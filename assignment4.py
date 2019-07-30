@@ -4,6 +4,7 @@ import mnist_handler
 import matplotlib.pyplot as plt
 import stochastic_gradient_descent as sgd
 import gradients as grads
+import gradient_test as grad_test
 
 # calculates the value of ReLU(X)
 def ReLU(X):
@@ -38,6 +39,36 @@ def build_layers(data_dimension, num_of_classes, layer_sizes):
 
     return W, np.asarray(B)
     # return np.asanyarray(), B
+
+
+# builds the layers of a network (weights and biases) according to specified layer seizes.
+# the first and last layer sizes are built according to the dimension of the data and the
+# number of classes.
+def build_layers2(data_dimension, num_of_classes, layer_sizes):
+    # data structures for the weights and biases
+    W = []
+    B = []
+
+    last_dim = data_dimension
+    num_of_layers = len(layer_sizes)
+
+    # building hidden layers
+    for i in range(num_of_layers):
+        layer_size_i = layer_sizes[i]
+        W_i = np.random.randn(layer_size_i, last_dim)
+        b_i = np.random.randn(layer_size_i)
+        last_dim = layer_size_i
+        W.append(W_i)
+        B.append(b_i)
+
+    # adding the last layer, +1 is for biases
+    w_last_layer = np.random.randn(num_of_classes, last_dim + 1)
+    W.append(w_last_layer)
+    W = np.asarray(W)
+
+    return W, np.asarray(B)
+    # return np.asanyarray(), B
+
 
 # calculates the forward propagation of the NN and returns the current loss
 # as well as the ReLU derivatives of each hidden layer (those that are needed for
@@ -76,9 +107,9 @@ def backward_propagation(W, X, B, C, relu_derivative, x_history, learning_rate):
     return W, B
 
 
-def nn_sgd(X, C, layer_sizes, max_iter=50, x_valid=None, c_valid=None, learning_rate=0.1, batch_size=1000):
+def nn_sgd(X, C, layer_sizes, max_iter=50, x_valid=None, c_valid=None, learning_rate=0.1, batch_size=100):
 
-    W, B = build_layers(X.shape[0], C.shape[0], layer_sizes)
+    W, B = build_layers2(X.shape[0], C.shape[0], layer_sizes)
     c_training, c_validation =  sgd.rearrange_labels(C, c_valid)
     x_loss = np.zeros((layer_sizes[-1], X.shape[1]))
 
@@ -88,9 +119,10 @@ def nn_sgd(X, C, layer_sizes, max_iter=50, x_valid=None, c_valid=None, learning_
 
         # chose learning rate to advance thusly
         learning_rate = 1 / np.sqrt(i + 1)
+        # learning_rate = 0.01
 
         for j in range(num_of_mini_batches):
-            batch_indexes = perm[(j * batch_size):((j + 1) * batch_size)];
+            batch_indexes = perm[(j * batch_size):((j + 1) * batch_size)]
             # iterating over all mini batches
             mini_batch_x = X[:, batch_indexes]
             mini_batch_c = C[:, batch_indexes]
@@ -292,14 +324,24 @@ if __name__ == "__main__":
 # ================================================================================================
 # ================================================================================================
 
-# gradient_test_by_w()
-#  TODO: refactor it so wil not be duplicate code
-# gradient_test_x()
 
+    # grad_test.gradient_test_w(5,5,4)
+#  TODO: refactor it so will not be duplicate code
+# gradient_test_x()
+#     grad_test.test_jac_b_t_v(5,7,3)
+#     grad_test.test_jac_x_t_v(5,5,3)
+#     grad_test.test_jac_w_t_v(5,5,5)
 # ================================================================================================
 # ================================================================================================
 # =============================       RUNNING NN (question 4 - 7)      ===========================
 # ================================================================================================
 # ================================================================================================
-    nn_sgd(Yt, Ct, layer_sizes=[5, 5, 4, 4, 8, 5, 2, 3, 12], max_iter=10_000, x_valid=Yv, c_valid = Cv)
+
+# this explodes
+#     nn_sgd(Yt, Ct, layer_sizes=[5, 7, 12, 15, 10, 8, 10, 10, 6, 4], max_iter=10_000, x_valid=Yv, c_valid = Cv)
+    nn_sgd(Yt, Ct, layer_sizes=[5, 6, 7, 6, 5], max_iter=10_000, x_valid=Yv, c_valid = Cv)
+
+#   does not converge
+#     nn_sgd(Yt, Ct, layer_sizes=[5, 5, 6], max_iter=10_000, x_valid=Yv, c_valid = Cv)
+
 # running_on_mnist_data_set()

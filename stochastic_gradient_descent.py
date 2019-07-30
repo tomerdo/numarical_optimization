@@ -65,8 +65,6 @@ def softmax(X, W):
     return num / den
 
 
-
-
 def check_predication(W, X, Xvalid, c_training, c_validation, num_of_samples=1000):
     training_idx = np.random.randint(0, X.shape[1] - 1, num_of_samples)
     validation_idx = np.random.randint(0, Xvalid.shape[1] - 1, num_of_samples)
